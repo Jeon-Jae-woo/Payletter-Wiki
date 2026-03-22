@@ -134,14 +134,13 @@
 .prose h2 { @apply text-2xl font-semibold text-gray-900 mt-6 mb-2; }
 .prose h3 { @apply text-xl font-semibold text-gray-900 mt-5 mb-2; }
 .prose p { @apply text-base text-gray-700 leading-relaxed mb-3; }
-
-/* TipTap v3: listItem wraps content in <p>, so use list-outside + padding
-   and strip margins from <p> inside <li> to keep text on the same line as bullet */
-.prose ul { @apply list-disc pl-5 mb-3 space-y-1; }
-.prose ol { @apply list-decimal pl-5 mb-3 space-y-1; }
+/* list-outside (default) + pl-6: TipTap v3 wraps list content in <p> inside <li>.
+   list-inside would push the marker onto its own line above the <p> block. */
+.prose ul { @apply list-disc pl-6 mb-3 space-y-1; }
+.prose ol { @apply list-decimal pl-6 mb-3 space-y-1; }
 .prose li { @apply text-gray-700; }
-.prose li > p { @apply my-0; }
-
+/* Remove paragraph margin inside list items so text sits inline with the marker */
+.prose li > p { @apply mb-0; }
 .prose blockquote { @apply border-l-4 border-[#0054FF] pl-4 italic text-gray-600 my-4; }
 .prose hr { @apply border-border my-6; }
 
