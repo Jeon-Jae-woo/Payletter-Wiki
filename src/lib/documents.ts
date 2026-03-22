@@ -42,6 +42,7 @@ export async function createDocument(data: {
   title?: string;
   parent_id?: string | null;
   icon?: string;
+  visibility?: 'default' | 'private' | 'public';
 }) {
   return supabase
     .from('documents')
@@ -50,6 +51,7 @@ export async function createDocument(data: {
       title: data.title ?? '제목 없음',
       parent_id: data.parent_id ?? null,
       icon: data.icon ?? null,
+      visibility: data.visibility ?? 'default',
     })
     .select()
     .single();

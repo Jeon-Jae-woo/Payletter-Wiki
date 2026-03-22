@@ -293,8 +293,44 @@ export default function Sidebar() {
         parent_id: parentId,
       });
       if (!error && data) {
+        router.push('/documents/' + (data as Document).id);
+      }
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
+  async function handleCreatePrivateDocument() {
+    if (!userId || isCreating) return;
+    setIsCreating(true);
+    try {
+      const { data, error } = await createDocument({
+        user_id: userId,
+        title: '제목 없음',
+        visibility: 'private',
+      });
+      if (!error && data) {
         const newDoc = data as Document;
+        setPrivateDocuments((prev) => [...prev, newDoc]);
         router.push('/documents/' + newDoc.id);
+      }
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
+  async function handleCreateChildPrivateDocument(parentId: string) {
+    if (!userId || isCreating) return;
+    setIsCreating(true);
+    try {
+      const { data, error } = await createDocument({
+        user_id: userId,
+        title: '제목 없음',
+        parent_id: parentId,
+        visibility: 'private',
+      });
+      if (!error && data) {
+        router.push('/documents/' + (data as Document).id);
       }
     } finally {
       setIsCreating(false);
@@ -355,101 +391,130 @@ export default function Sidebar() {
 
         <Separator className="my-2" />
 
-        {/* Pages Section */}
+        {/* 페이지 + 비공개 — 하나의 ScrollArea */}
         <div className="flex flex-col flex-1 min-h-0 px-2">
-          <div className="flex items-center justify-between px-2 mb-1">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-              페이지
-            </p>
-            <button
-              onClick={handleCreateRootDocument}
-              disabled={isCreating || !userId}
-              className="flex items-center justify-center w-5 h-5 rounded hover:bg-blue-50 hover:text-[#0054FF] text-gray-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              aria-label="새 페이지"
-            >
-              <Plus size={14} />
-            </button>
-          </div>
-
           <ScrollArea className="flex-1">
-            <ul className="space-y-0.5 pr-1">
-              {isLoading ? (
-                <SkeletonRows />
-              ) : documents.length === 0 ? (
-                <li className="px-2 py-3 text-center">
-                  <p className="text-xs text-gray-400">페이지가 없습니다</p>
-                  <button
-                    onClick={handleCreateRootDocument}
-                    disabled={isCreating || !userId}
-                    className="mt-1 text-xs text-[#0054FF] hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    첫 페이지를 만들어보세요
-                  </button>
-                </li>
-              ) : (
-                documents.map((doc) => (
-                  <DocRow
-                    key={doc.id}
-                    doc={doc}
-                    userId={userId}
-                    onCreateChild={handleCreateChildDocument}
-                    depth={0}
-                  />
-                ))
-              )}
-            </ul>
-          </ScrollArea>
+            {/* 공개 페이지 섹션 */}
+            <div className="mb-1">
+              <div className="flex items-center justify-between px-2 mb-1">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                  페이지
+                </p>
+                <button
+                  onClick={handleCreateRootDocument}
+                  disabled={isCreating || !userId}
+                  className="flex items-center justify-center w-5 h-5 rounded hover:bg-blue-50 hover:text-[#0054FF] text-gray-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="새 페이지"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
 
-          {/* New Page button */}
-          <div className="pb-2 pt-1">
-            <button
-              onClick={handleCreateRootDocument}
-              disabled={isCreating || !userId}
-              className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm text-gray-500 hover:bg-blue-50 hover:text-[#0054FF] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Plus size={15} className="shrink-0" />
-              <span>새 페이지</span>
-            </button>
-          </div>
-        </div>
+              <ul className="space-y-0.5 pr-1">
+                {isLoading ? (
+                  <SkeletonRows />
+                ) : documents.length === 0 ? (
+                  <li className="px-2 py-2 text-center">
+                    <p className="text-xs text-gray-400">페이지가 없습니다</p>
+                    <button
+                      onClick={handleCreateRootDocument}
+                      disabled={isCreating || !userId}
+                      className="mt-1 text-xs text-[#0054FF] hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      첫 페이지를 만들어보세요
+                    </button>
+                  </li>
+                ) : (
+                  documents.map((doc) => (
+                    <DocRow
+                      key={doc.id}
+                      doc={doc}
+                      userId={userId}
+                      onCreateChild={handleCreateChildDocument}
+                      depth={0}
+                    />
+                  ))
+                )}
+              </ul>
 
-        {/* 비공개 페이지 섹션 */}
-        {privateDocuments.length > 0 && (
-          <>
-            <Separator className="my-1" />
-            <div className="px-2 pb-2">
               <button
-                onClick={() => setShowPrivate((v) => !v)}
-                className="flex items-center gap-1.5 w-full px-2 py-1 mb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={handleCreateRootDocument}
+                disabled={isCreating || !userId}
+                className="flex items-center gap-2 w-full px-2 py-1.5 mt-0.5 rounded-md text-sm text-gray-500 hover:bg-blue-50 hover:text-[#0054FF] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <Lock size={10} />
-                비공개
-                <ChevronDown
-                  size={10}
-                  className={`ml-auto transition-transform ${showPrivate ? '' : '-rotate-90'}`}
-                />
+                <Plus size={15} className="shrink-0" />
+                <span>새 페이지</span>
               </button>
+            </div>
+
+            <Separator className="my-2" />
+
+            {/* 비공개 페이지 섹션 */}
+            <div className="mb-1">
+              <div className="flex items-center justify-between px-2 mb-1">
+                <button
+                  onClick={() => setShowPrivate((v) => !v)}
+                  className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <Lock size={10} />
+                  비공개
+                  <ChevronDown
+                    size={10}
+                    className={`transition-transform ${showPrivate ? '' : '-rotate-90'}`}
+                  />
+                </button>
+                <button
+                  onClick={handleCreatePrivateDocument}
+                  disabled={isCreating || !userId}
+                  className="flex items-center justify-center w-5 h-5 rounded hover:bg-blue-50 hover:text-[#0054FF] text-gray-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="새 비공개 페이지"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+
               {showPrivate && (
-                <ul className="space-y-0.5">
-                  {privateDocuments.map((doc) => (
-                    <li key={doc.id}>
-                      <div
-                        className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-sm text-gray-600 hover:bg-blue-50 hover:text-[#0054FF] transition-colors cursor-pointer"
-                        onClick={() => router.push('/documents/' + doc.id)}
-                      >
-                        <Lock size={11} className="shrink-0 text-gray-400" />
-                        {doc.icon && (
-                          <span className="shrink-0 text-[14px] leading-none">{doc.icon}</span>
-                        )}
-                        <span className="flex-1 truncate text-xs">{doc.title}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <ul className="space-y-0.5 pr-1">
+                    {isLoading ? (
+                      <SkeletonRows />
+                    ) : privateDocuments.length === 0 ? (
+                      <li className="px-2 py-2 text-center">
+                        <p className="text-xs text-gray-400">비공개 페이지가 없습니다</p>
+                        <button
+                          onClick={handleCreatePrivateDocument}
+                          disabled={isCreating || !userId}
+                          className="mt-1 text-xs text-[#0054FF] hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          비공개 페이지를 만들어보세요
+                        </button>
+                      </li>
+                    ) : (
+                      privateDocuments.map((doc) => (
+                        <DocRow
+                          key={doc.id}
+                          doc={doc}
+                          userId={userId}
+                          onCreateChild={handleCreateChildPrivateDocument}
+                          depth={0}
+                        />
+                      ))
+                    )}
+                  </ul>
+
+                  <button
+                    onClick={handleCreatePrivateDocument}
+                    disabled={isCreating || !userId}
+                    className="flex items-center gap-2 w-full px-2 py-1.5 mt-0.5 rounded-md text-sm text-gray-500 hover:bg-blue-50 hover:text-[#0054FF] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Plus size={15} className="shrink-0" />
+                    <span>새 비공개 페이지</span>
+                  </button>
+                </>
               )}
             </div>
-          </>
-        )}
+          </ScrollArea>
+        </div>
 
         <Separator />
 
