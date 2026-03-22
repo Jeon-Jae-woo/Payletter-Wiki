@@ -166,16 +166,26 @@ export default function Editor({ document }: Props) {
   }, [icon, document.title]);
 
   // ── 아이콘 핸들러 ─────────────────────────────────────────
+  function dispatchIconChange(icon: string | null) {
+    window.dispatchEvent(
+      new CustomEvent('document-icon-changed', {
+        detail: { id: document.id, icon },
+      })
+    );
+  }
+
   async function handleSelectEmoji(emoji: string) {
     setIcon(emoji);
     setShowIconPicker(false);
     await updateDocument(document.id, { icon: emoji });
+    dispatchIconChange(emoji);
   }
 
   async function handleRemoveIcon() {
     setIcon(null);
     setShowIconPicker(false);
     await updateDocument(document.id, { icon: null });
+    dispatchIconChange(null);
   }
 
   // ── 커버 핸들러 ───────────────────────────────────────────

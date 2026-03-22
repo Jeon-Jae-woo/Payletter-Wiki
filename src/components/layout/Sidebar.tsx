@@ -238,6 +238,21 @@ export default function Sidebar() {
     return () => window.removeEventListener('document-title-changed', handleTitleChange);
   }, []);
 
+  // 에디터에서 아이콘 변경 시 사이드바 실시간 반영
+  useEffect(() => {
+    function handleIconChange(e: Event) {
+      const { id, icon } = (e as CustomEvent<{ id: string; icon: string | null }>).detail;
+      setDocuments((prev) =>
+        prev.map((doc) => (doc.id === id ? { ...doc, icon } : doc))
+      );
+      setPrivateDocuments((prev) =>
+        prev.map((doc) => (doc.id === id ? { ...doc, icon } : doc))
+      );
+    }
+    window.addEventListener('document-icon-changed', handleIconChange);
+    return () => window.removeEventListener('document-icon-changed', handleIconChange);
+  }, []);
+
   // 에디터에서 visibility 변경 시 사이드바 섹션 간 이동
   useEffect(() => {
     function handleVisibilityChange(e: Event) {
