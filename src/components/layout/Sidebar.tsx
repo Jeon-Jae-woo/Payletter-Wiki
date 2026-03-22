@@ -56,6 +56,18 @@ function DocRow({
   const [children, setChildren] = useState<Document[] | null>(null);
   const [loadingChildren, setLoadingChildren] = useState(false);
 
+  // 이 문서의 하위에 새 문서가 생성되면 children에 추가하고 펼치기
+  useEffect(() => {
+    function handleChildCreated(e: Event) {
+      const { parentId, doc: newDoc } = (e as CustomEvent<{ parentId: string; doc: Document }>).detail;
+      if (parentId !== doc.id) return;
+      setChildren((prev) => (prev === null ? [newDoc] : [...prev, newDoc]));
+      setIsExpanded(true);
+    }
+    window.addEventListener('child-document-created', handleChildCreated);
+    return () => window.removeEventListener('child-document-created', handleChildCreated);
+  }, [doc.id]);
+
   // Cap indent: depth 0 → pl-0, depth 1 → pl-3, depth 2+ → pl-6
   const paddingLeft = depth === 0 ? 0 : depth === 1 ? 12 : 24;
 
@@ -310,7 +322,9 @@ export default function Sidebar() {
         parent_id: parentId,
       });
       if (!error && data) {
-        router.push('/documents/' + (data as Document).id);
+        const newDoc = data as Document;
+        window.dispatchEvent(new CustomEvent('child-document-created', { detail: { parentId, doc: newDoc } }));
+        router.push('/documents/' + newDoc.id);
       }
     } finally {
       setIsCreating(false);
@@ -347,7 +361,9 @@ export default function Sidebar() {
         visibility: 'private',
       });
       if (!error && data) {
-        router.push('/documents/' + (data as Document).id);
+        const newDoc = data as Document;
+        window.dispatchEvent(new CustomEvent('child-document-created', { detail: { parentId, doc: newDoc } }));
+        router.push('/documents/' + newDoc.id);
       }
     } finally {
       setIsCreating(false);
