@@ -2,6 +2,7 @@
 import 'tippy.js/dist/tippy.css';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { Extension } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
 import SlashCommandExtension from './SlashCommandExtension';
 import { useAutoSave } from '@/hooks/useAutoSave';
@@ -13,6 +14,29 @@ import { Smile, Camera, Star } from 'lucide-react';
 type Props = {
   document: Document;
 };
+
+// TipTap v3 fix: Enter on empty list item should exit the list.
+// In v3, splitListItem returns false for top-level empty items but has no liftEmptyBlock fallback.
+const ListItemEnterFix = Extension.create({
+  name: 'listItemEnterFix',
+  priority: 200,
+  addKeyboardShortcuts() {
+    return {
+      Enter: () => {
+        const { state, commands } = this.editor;
+        const { $from } = state.selection;
+        const isInEmptyListItemParagraph =
+          $from.parent.type.name === 'paragraph' &&
+          $from.parent.content.size === 0 &&
+          $from.node(-1)?.type.name === 'listItem';
+        if (isInEmptyListItemParagraph) {
+          return commands.liftListItem('listItem');
+        }
+        return false;
+      },
+    };
+  },
+});
 
 const SAVE_STATUS_LABEL: Record<string, string> = {
   idle: '',
@@ -145,6 +169,7 @@ export default function Editor({ document }: Props) {
           return "내용을 입력하거나 '/'를 눌러 명령어를 사용하세요";
         },
       }),
+      ListItemEnterFix,
       SlashCommandExtension,
     ],
     content: document.content ?? '',
