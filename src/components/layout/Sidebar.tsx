@@ -223,6 +223,21 @@ export default function Sidebar() {
     return () => { cancelled = true; };
   }, []);
 
+  // 에디터에서 제목 변경 시 사이드바 실시간 반영
+  useEffect(() => {
+    function handleTitleChange(e: Event) {
+      const { id, title } = (e as CustomEvent<{ id: string; title: string }>).detail;
+      setDocuments((prev) =>
+        prev.map((doc) => (doc.id === id ? { ...doc, title } : doc))
+      );
+      setPrivateDocuments((prev) =>
+        prev.map((doc) => (doc.id === id ? { ...doc, title } : doc))
+      );
+    }
+    window.addEventListener('document-title-changed', handleTitleChange);
+    return () => window.removeEventListener('document-title-changed', handleTitleChange);
+  }, []);
+
   async function handleCreateRootDocument() {
     if (!userId || isCreating) return;
     setIsCreating(true);

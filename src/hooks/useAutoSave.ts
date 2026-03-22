@@ -15,7 +15,14 @@ export function useAutoSave(documentId: string) {
         setSaveStatus('saving');
         const { error } = await updateDocument(documentId, data);
         setSaveStatus(error ? 'error' : 'saved');
-        // Reset to idle after 2s
+        // 제목이 변경된 경우 사이드바에 알림
+        if (!error && data.title !== undefined) {
+          window.dispatchEvent(
+            new CustomEvent('document-title-changed', {
+              detail: { id: documentId, title: data.title },
+            })
+          );
+        }
         setTimeout(() => setSaveStatus('idle'), 2000);
       }, 1000);
     },
