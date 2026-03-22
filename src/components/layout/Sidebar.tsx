@@ -238,6 +238,33 @@ export default function Sidebar() {
     return () => window.removeEventListener('document-title-changed', handleTitleChange);
   }, []);
 
+  // 에디터에서 visibility 변경 시 사이드바 섹션 간 이동
+  useEffect(() => {
+    function handleVisibilityChange(e: Event) {
+      const { id, visibility, doc } = (e as CustomEvent<{
+        id: string;
+        visibility: 'default' | 'private' | 'public';
+        doc: Document;
+      }>).detail;
+
+      if (visibility === 'private') {
+        // 일반 목록 → 비공개 목록으로 이동
+        setDocuments((prev) => prev.filter((d) => d.id !== id));
+        setPrivateDocuments((prev) =>
+          prev.some((d) => d.id === id) ? prev : [doc, ...prev]
+        );
+      } else {
+        // 비공개 목록 → 일반 목록으로 이동
+        setPrivateDocuments((prev) => prev.filter((d) => d.id !== id));
+        setDocuments((prev) =>
+          prev.some((d) => d.id === id) ? prev : [doc, ...prev]
+        );
+      }
+    }
+    window.addEventListener('document-visibility-changed', handleVisibilityChange);
+    return () => window.removeEventListener('document-visibility-changed', handleVisibilityChange);
+  }, []);
+
   async function handleCreateRootDocument() {
     if (!userId || isCreating) return;
     setIsCreating(true);

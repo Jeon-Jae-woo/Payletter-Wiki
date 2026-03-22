@@ -226,6 +226,13 @@ export default function Editor({ document }: Props) {
         content: currentContent ?? null,
       });
     }
+
+    // 사이드바에 visibility 변경 알림
+    window.dispatchEvent(
+      new CustomEvent('document-visibility-changed', {
+        detail: { id: document.id, visibility: next, doc: { ...document, visibility: next } },
+      })
+    );
   }
 
   // ── TipTap 에디터 ─────────────────────────────────────────
