@@ -16,8 +16,13 @@ const TAB_LABELS: Record<Tab, string> = {
   done: '완료',
 };
 
+function getLocalDateStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function filterTodos(todos: Todo[], tab: Tab): Todo[] {
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalDateStr();
   if (tab === 'today') return todos.filter((t) => !t.is_done && t.due_date === todayStr);
   if (tab === 'all') return todos.filter((t) => !t.is_done);
   return todos.filter((t) => t.is_done);
@@ -57,7 +62,7 @@ export default function TodoPage() {
 
   const filtered = filterTodos(todos, tab);
 
-  const todayCount = todos.filter((t) => !t.is_done && t.due_date === new Date().toISOString().split('T')[0]).length;
+  const todayCount = todos.filter((t) => !t.is_done && t.due_date === getLocalDateStr()).length;
   const allCount = todos.filter((t) => !t.is_done).length;
   const doneCount = todos.filter((t) => t.is_done).length;
 
