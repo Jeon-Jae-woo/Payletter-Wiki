@@ -1,36 +1,204 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LetterWiki
 
-## Getting Started
+페이레터(Payletter)의 브랜드 컬러와 노션(Notion)의 UX를 결합한 개인형 지식 및 일정 관리 플랫폼.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 프로젝트 개요
+
+위키 문서와 캘린더 일정이 상호 연결되는 개인 워크스페이스입니다. 단순 메모를 넘어, 문서와 일정 사이의 백링크(Backlink)를 통해 컨텍스트를 연결하는 지능형 지식 관리를 지향합니다.
+
+---
+
+## 브랜드 & 디자인 시스템
+
+| 항목 | 값 |
+|---|---|
+| Primary Color | `#0054FF` (Payletter Blue) |
+| Background | White / `#F7F7F7` (Sidebar) |
+| Text | Dark Gray |
+| Font | Pretendard (CDN) |
+| Layout | Notion 스타일 — 좌측 사이드바 + 중앙 에디터 |
+
+---
+
+## 기술 스택
+
+| 레이어 | 기술 |
+|---|---|
+| Framework | Next.js 16 (App Router, TypeScript, `src/` 디렉토리) |
+| Styling | Tailwind CSS v4 + Shadcn UI (Slate base, CSS variables) |
+| Database / Auth | Supabase (PostgreSQL + Row Level Security) |
+| Editor | TipTap v3 (Rich Text + 슬래시 커맨드) |
+| Calendar | React-Day-Picker v9 |
+| Icons | Lucide React |
+| Popup | tippy.js (슬래시 커맨드 메뉴) |
+
+---
+
+## 구현된 기능 (MVP)
+
+### 1. Notion 스타일 Wiki
+
+- **무제한 계층 문서 트리** — 사이드바에서 부모/자식 문서를 중첩 구조로 관리. 클릭으로 펼치기/접기
+- **TipTap 에디터** — 리치 텍스트 편집, 마크다운 단축키 지원
+- **슬래시(`/`) 커맨드** — 제목 1~3, 본문, 글머리 기호, 순서 목록, 인용구 등 7가지 블록 타입 삽입
+- **1초 디바운스 자동 저장** — `idle / 저장 중... / 저장됨 / 저장 실패` 상태 표시
+- **아이콘 선택** — 24가지 이모지 픽커, 문서별 개별 아이콘 설정
+- **커버 이미지** — 이미지 URL 직접 입력 또는 4가지 프리셋 그라디언트 선택
+- **즐겨찾기 토글** — 에디터 우상단 ☆ 버튼으로 즐겨찾기 추가/해제
+
+### 2. Smart Calendar
+
+- **월간 / 주간 뷰 전환** — 헤더 토글 버튼으로 즉시 전환
+- **일정 생성** — 날짜 클릭 → 모달에서 제목, 날짜, 시간, 종일 여부, 메모 입력
+- **Wiki Linking (Backlink)** — 일정 생성 시 관련 위키 문서를 검색하여 태깅. `event_document_links` 테이블에 저장
+- **일정 상세 카드** — 캘린더 내 이벤트 클릭 시 하단에 상세 정보 표시
+- **Payletter Blue 하이라이트** — 오늘 날짜와 이벤트에 `#0054FF` 적용
+
+### 3. 네비게이션 & 검색
+
+- **통합 검색 (Cmd+K / Ctrl+K)** — 어디서든 단축키로 검색 모달 열기. 200ms 디바운스, 키보드 화살표 + Enter 네비게이션
+- **전용 검색 페이지 (`/search`)** — 사이드바 "검색" 메뉴에서 접근 가능한 인라인 검색 페이지
+- **최근 문서 (`/recent`)** — 최근 수정된 문서 20개를 상대 시간(`n분 전`)으로 표시
+- **즐겨찾기 (`/favorites`)** — `is_favorite = true`인 문서 목록
+
+### 4. 인증 (Auth)
+
+- **이메일/패스워드 로그인 · 회원가입** — Supabase Auth 연동
+- **보호된 라우팅** — `src/proxy.ts`에서 미인증 사용자를 `/login`으로 리디렉트
+- **Auth 콜백** — `/auth/callback` 라우트로 OAuth 세션 처리
+
+---
+
+## 프로젝트 구조
+
+```
+src/
+├── app/
+│   ├── layout.tsx                      # 루트 레이아웃 (Pretendard 폰트, lang="ko")
+│   ├── globals.css                     # Payletter Blue 테마 + TipTap prose 스타일
+│   ├── (auth)/
+│   │   ├── layout.tsx                  # 인증 페이지 레이아웃 (중앙 정렬)
+│   │   ├── login/page.tsx              # 로그인 페이지
+│   │   └── signup/page.tsx             # 회원가입 페이지
+│   ├── (wiki)/
+│   │   ├── layout.tsx                  # MainLayout 래퍼
+│   │   ├── page.tsx                    # 홈 (시작하기)
+│   │   ├── documents/[id]/page.tsx     # 문서 에디터 (Server Component)
+│   │   ├── calendar/page.tsx           # 캘린더 페이지
+│   │   ├── search/page.tsx             # 검색 전용 페이지
+│   │   ├── recent/page.tsx             # 최근 문서
+│   │   └── favorites/page.tsx          # 즐겨찾기
+│   └── auth/callback/route.ts          # Supabase Auth 콜백
+├── components/
+│   ├── layout/
+│   │   ├── MainLayout.tsx              # 사이드바 + 헤더 + 검색모달 통합 레이아웃
+│   │   └── Sidebar.tsx                 # 중첩 문서 트리, 문서 생성, 접기/펼치기
+│   ├── editor/
+│   │   ├── Editor.tsx                  # TipTap 에디터 (아이콘·커버·즐겨찾기 포함)
+│   │   ├── SlashCommandExtension.ts    # '/' 트리거 TipTap 익스텐션
+│   │   └── SlashCommandMenu.tsx        # 키보드 네비게이션 슬래시 커맨드 팝업
+│   ├── calendar/
+│   │   ├── CalendarView.tsx            # 월/주 캘린더 뷰 (react-day-picker 기반)
+│   │   └── EventCreateModal.tsx        # 일정 생성 모달 (위키 연결 포함)
+│   ├── search/
+│   │   └── SearchModal.tsx             # Cmd+K 전역 검색 모달
+│   └── ui/                             # Shadcn UI 컴포넌트 (Button, Input, 등)
+├── hooks/
+│   └── useAutoSave.ts                  # 1초 디바운스 자동 저장 훅
+├── lib/
+│   ├── supabase.ts                     # 브라우저 Supabase 싱글턴 클라이언트
+│   ├── supabase-server.ts              # 서버 컴포넌트용 Supabase 클라이언트
+│   ├── documents.ts                    # 문서 CRUD 데이터 접근 레이어 (9개 함수)
+│   └── calendar.ts                     # 캘린더 이벤트 CRUD + 위키 링크 처리
+├── types/
+│   ├── index.ts                        # Document, CalendarEvent, EventDocumentLink 타입
+│   └── database.ts                     # Supabase Database 제네릭 타입
+└── proxy.ts                            # Next.js 16 Proxy (구 middleware) — 인증 가드
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 데이터베이스 스키마
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```sql
+-- 문서 테이블 (무제한 계층 구조)
+documents (
+  id         uuid PRIMARY KEY,
+  user_id    uuid REFERENCES auth.users,
+  parent_id  uuid REFERENCES documents,   -- null = 루트 문서
+  title      text,
+  content    jsonb,                        -- TipTap JSON
+  icon       text,                         -- 이모지
+  cover_url  text,                         -- 이미지 URL 또는 그라디언트
+  is_favorite boolean DEFAULT false,
+  sort_order integer DEFAULT 0,
+  created_at, updated_at timestamptz
+)
 
-## Learn More
+-- 캘린더 일정 테이블
+calendar_events (
+  id          uuid PRIMARY KEY,
+  user_id     uuid REFERENCES auth.users,
+  title       text,
+  description text,
+  start_at    timestamptz,
+  end_at      timestamptz,
+  all_day     boolean DEFAULT false,
+  color       text DEFAULT '#0054FF',
+  created_at, updated_at timestamptz
+)
 
-To learn more about Next.js, take a look at the following resources:
+-- 일정 ↔ 문서 백링크 테이블
+event_document_links (
+  event_id    uuid REFERENCES calendar_events,
+  document_id uuid REFERENCES documents,
+  PRIMARY KEY (event_id, document_id)
+)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+모든 테이블에 **Row Level Security(RLS)** 적용 — 사용자는 자신의 데이터에만 접근 가능.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 로컬 실행
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 1. 환경변수 설정
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`.env.local` 파일을 생성하고 Supabase 프로젝트 정보를 입력합니다.
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+### 2. DB 마이그레이션
+
+Supabase SQL Editor에서 아래 파일을 실행합니다.
+
+```
+supabase/migrations/001_init_schema.sql
+```
+
+### 3. 개발 서버 실행
+
+```bash
+npm install
+npm run dev
+```
+
+[http://localhost:3000](http://localhost:3000) 접속
+
+---
+
+## 에이전트 협업 프로토콜
+
+이 프로젝트는 Claude Code의 서브에이전트 아키텍처로 개발되었습니다. (`prd.md` 참고)
+
+| 에이전트 | 역할 |
+|---|---|
+| [System-Architect] | 프로젝트 스캐폴딩, 폴더 구조, 패키지 의존성 |
+| [DB-Agent] | Supabase 스키마 설계, SQL 마이그레이션, RLS |
+| [UI-Agent] | Shadcn UI 커스텀, Payletter 테마, 레이아웃 구현 |
+| [Feature-Agent] | 에디터 로직, 캘린더 연동, 비즈니스 로직 |
