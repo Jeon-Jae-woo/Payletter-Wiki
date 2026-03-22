@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { generateEncKey } from '@/lib/crypto';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
@@ -21,6 +22,12 @@ export default function LoginPage() {
     if (error) {
       setError('이메일 또는 비밀번호가 올바르지 않습니다.');
     } else {
+      // 기존 사용자에게 enc_key 없으면 자동 생성 (최초 1회)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && !user.user_metadata?.enc_key) {
+        const encKey = await generateEncKey();
+        await supabase.auth.updateUser({ data: { enc_key: encKey } });
+      }
       router.push('/');
       router.refresh();
     }

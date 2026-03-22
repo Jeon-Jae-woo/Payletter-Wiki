@@ -15,11 +15,12 @@ import {
   ChevronRight,
   ChevronDown,
   CalendarDays,
+  Lock,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/lib/supabase';
-import { getRootDocuments, createDocument, getChildDocuments } from '@/lib/documents';
+import { getRootDocuments, createDocument, getChildDocuments, getPrivateDocuments } from '@/lib/documents';
 import type { Document } from '@/types';
 
 type NavItem = {
@@ -179,9 +180,11 @@ export default function Sidebar() {
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [privateDocuments, setPrivateDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [showPrivate, setShowPrivate] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -201,14 +204,16 @@ export default function Sidebar() {
 
         setUserId(user.id);
 
-        const { data, error } = await getRootDocuments();
+        const [{ data, error }, { data: privData }] = await Promise.all([
+          getRootDocuments(),
+          getPrivateDocuments(),
+        ]);
         if (cancelled) return;
 
-        if (!error && data) {
-          setDocuments(data as Document[]);
-        }
+        if (!error && data) setDocuments(data as Document[]);
+        if (privData) setPrivateDocuments(privData as Document[]);
       } catch {
-        // silently fail — show empty state
+        // silently fail
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -365,6 +370,44 @@ export default function Sidebar() {
             </button>
           </div>
         </div>
+
+        {/* 비공개 페이지 섹션 */}
+        {privateDocuments.length > 0 && (
+          <>
+            <Separator className="my-1" />
+            <div className="px-2 pb-2">
+              <button
+                onClick={() => setShowPrivate((v) => !v)}
+                className="flex items-center gap-1.5 w-full px-2 py-1 mb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <Lock size={10} />
+                비공개
+                <ChevronDown
+                  size={10}
+                  className={`ml-auto transition-transform ${showPrivate ? '' : '-rotate-90'}`}
+                />
+              </button>
+              {showPrivate && (
+                <ul className="space-y-0.5">
+                  {privateDocuments.map((doc) => (
+                    <li key={doc.id}>
+                      <div
+                        className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-sm text-gray-600 hover:bg-blue-50 hover:text-[#0054FF] transition-colors cursor-pointer"
+                        onClick={() => router.push('/documents/' + doc.id)}
+                      >
+                        <Lock size={11} className="shrink-0 text-gray-400" />
+                        {doc.icon && (
+                          <span className="shrink-0 text-[14px] leading-none">{doc.icon}</span>
+                        )}
+                        <span className="flex-1 truncate text-xs">{doc.title}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </>
+        )}
 
         <Separator />
 

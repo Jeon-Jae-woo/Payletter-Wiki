@@ -2,21 +2,29 @@ import { supabase } from './supabase';
 import type { Document } from '@/types';
 
 // Fetch root-level documents for the current user
-export async function getRootDocuments() {
-  return supabase
+export async function getRootDocuments(includePrivate = false) {
+  let query = supabase
     .from('documents')
     .select('*')
     .is('parent_id', null)
     .order('sort_order', { ascending: true });
+  if (!includePrivate) {
+    query = query.eq('visibility', 'default');
+  }
+  return query;
 }
 
 // Fetch children of a document
-export async function getChildDocuments(parentId: string) {
-  return supabase
+export async function getChildDocuments(parentId: string, includePrivate = false) {
+  let query = supabase
     .from('documents')
     .select('*')
     .eq('parent_id', parentId)
     .order('sort_order', { ascending: true });
+  if (!includePrivate) {
+    query = query.eq('visibility', 'default');
+  }
+  return query;
 }
 
 // Fetch a single document by id
@@ -50,7 +58,7 @@ export async function createDocument(data: {
 // Update document content (auto-save)
 export async function updateDocument(
   id: string,
-  data: Partial<Pick<Document, 'title' | 'content' | 'icon' | 'cover_url' | 'is_favorite' | 'sort_order'>>
+  data: Partial<Pick<Document, 'title' | 'content' | 'icon' | 'cover_url' | 'is_favorite' | 'sort_order' | 'visibility'>>
 ) {
   return supabase
     .from('documents')
@@ -78,20 +86,38 @@ export async function getFavoriteDocuments() {
 }
 
 // Get recently updated documents
-export async function getRecentDocuments(limit = 10) {
-  return supabase
+export async function getRecentDocuments(limit = 10, includePrivate = false) {
+  let query = supabase
     .from('documents')
     .select('*')
     .order('updated_at', { ascending: false })
     .limit(limit);
+  if (!includePrivate) {
+    query = query.eq('visibility', 'default');
+  }
+  return query;
 }
 
 // Full-text search across titles
-export async function searchDocuments(query: string) {
-  return supabase
+export async function searchDocuments(query: string, includePrivate = false) {
+  let q = supabase
     .from('documents')
     .select('*')
     .ilike('title', `%${query}%`)
     .order('updated_at', { ascending: false })
     .limit(20);
+  if (!includePrivate) {
+    q = q.eq('visibility', 'default');
+  }
+  return q;
 }
+
+// 비공개 문서만 조회
+export async function getPrivateDocuments() {
+  return supabase
+    .from('documents')
+    .select('*')
+    .eq('visibility', 'private')
+    .order('updated_at', { ascending: false });
+}
+

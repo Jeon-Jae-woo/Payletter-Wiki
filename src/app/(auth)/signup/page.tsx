@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { generateEncKey } from '@/lib/crypto';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
@@ -37,6 +38,11 @@ export default function SignupPage() {
       }
     } else if (data.session) {
       // 이메일 확인 OFF 상태 — 즉시 세션 발급됨
+      // 비공개 문서 암호화 키 자동 생성 (사용자에게 노출되지 않음)
+      if (!data.user?.user_metadata?.enc_key) {
+        const encKey = await generateEncKey();
+        await supabase.auth.updateUser({ data: { enc_key: encKey } });
+      }
       router.push('/');
       router.refresh();
     } else {

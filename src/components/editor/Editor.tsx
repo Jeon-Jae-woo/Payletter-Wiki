@@ -7,16 +7,21 @@ import Placeholder from '@tiptap/extension-placeholder';
 import SlashCommandExtension from './SlashCommandExtension';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { updateDocument } from '@/lib/documents';
+import {
+  encryptContent,
+  decryptContent,
+  isEncryptedContent,
+} from '@/lib/crypto';
+import { supabase } from '@/lib/supabase';
 import type { Document } from '@/types';
 import { useState, useRef, useEffect } from 'react';
-import { Smile, Camera, Star } from 'lucide-react';
+import { Smile, Camera, Star, Globe, Lock } from 'lucide-react';
 
 type Props = {
   document: Document;
 };
 
 // TipTap v3 fix: Enter on empty list item should exit the list.
-// In v3, splitListItem returns false for top-level empty items but has no liftEmptyBlock fallback.
 const ListItemEnterFix = Extension.create({
   name: 'listItemEnterFix',
   priority: 200,
@@ -65,29 +70,68 @@ function isGradient(value: string): boolean {
 export default function Editor({ document }: Props) {
   const { save, saveStatus } = useAutoSave(document.id);
 
-  // Icon state
+  // ── 암호화 키 & 콘텐츠 초기화 ──────────────────────────────
+  const encKeyRef = useRef<string | null>(null);
+  const [contentReady, setContentReady] = useState(false);
+
+  // ── Visibility ─────────────────────────────────────────────
+  const [visibility, setVisibility] = useState<'default' | 'private' | 'public'>(
+    document.visibility ?? 'default'
+  );
+  const visibilityRef = useRef(visibility);
+  useEffect(() => { visibilityRef.current = visibility; }, [visibility]);
+
+  // ── Icon ───────────────────────────────────────────────────
   const [icon, setIcon] = useState<string | null>(document.icon ?? null);
   const [showIconPicker, setShowIconPicker] = useState(false);
   const iconPickerRef = useRef<HTMLDivElement>(null);
   const iconButtonRef = useRef<HTMLButtonElement | HTMLSpanElement | null>(null);
 
-  // Favorite state
+  // ── Favorite ───────────────────────────────────────────────
   const [isFavorite, setIsFavorite] = useState<boolean>(document.is_favorite ?? false);
 
-  async function handleToggleFavorite() {
-    const next = !isFavorite;
-    setIsFavorite(next);
-    await updateDocument(document.id, { is_favorite: next });
-  }
-
-  // Cover state
+  // ── Cover ──────────────────────────────────────────────────
   const [coverUrl, setCoverUrl] = useState<string | null>(document.cover_url ?? null);
   const [showCoverPanel, setShowCoverPanel] = useState(false);
   const [coverInput, setCoverInput] = useState('');
   const [showCoverButton, setShowCoverButton] = useState(false);
   const coverPanelRef = useRef<HTMLDivElement>(null);
 
-  // Close icon picker on outside click
+  // ── 초기화: 암호화 키 로드 + 비공개 문서 복호화 ────────────
+  useEffect(() => {
+    let cancelled = false;
+
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      const key: string | null = user?.user_metadata?.enc_key ?? null;
+      encKeyRef.current = key;
+
+      if (isEncryptedContent(document.content) && key) {
+        try {
+          const plain = await decryptContent(document.content, key);
+          if (!cancelled) {
+            editorInitContentRef.current = plain;
+          }
+        } catch {
+          // 복호화 실패 시 빈 문서로 열림
+          if (!cancelled) editorInitContentRef.current = null;
+        }
+      } else {
+        if (!cancelled) editorInitContentRef.current = document.content as Record<string, unknown> | null;
+      }
+
+      if (!cancelled) setContentReady(true);
+    }
+
+    init();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [document.id]);
+
+  // 에디터 초기 콘텐츠를 ref로 보관 (useEditor보다 먼저 필요)
+  const editorInitContentRef = useRef<Record<string, unknown> | null>(null);
+
+  // ── 아이콘 피커 외부 클릭 닫기 ────────────────────────────
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (
@@ -99,35 +143,29 @@ export default function Editor({ document }: Props) {
         setShowIconPicker(false);
       }
     }
-    if (showIconPicker) {
-      window.addEventListener('mousedown', handleClickOutside);
-    }
+    if (showIconPicker) window.addEventListener('mousedown', handleClickOutside);
     return () => window.removeEventListener('mousedown', handleClickOutside);
   }, [showIconPicker]);
 
-  // Close cover panel on outside click
+  // ── 커버 패널 외부 클릭 닫기 ──────────────────────────────
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (
-        coverPanelRef.current &&
-        !coverPanelRef.current.contains(e.target as Node)
-      ) {
+      if (coverPanelRef.current && !coverPanelRef.current.contains(e.target as Node)) {
         setShowCoverPanel(false);
       }
     }
-    if (showCoverPanel) {
-      window.addEventListener('mousedown', handleClickOutside);
-    }
+    if (showCoverPanel) window.addEventListener('mousedown', handleClickOutside);
     return () => window.removeEventListener('mousedown', handleClickOutside);
   }, [showCoverPanel]);
 
-  // Sync browser tab title with icon + document title
+  // ── 브라우저 탭 타이틀 ────────────────────────────────────
   useEffect(() => {
     window.document.title = icon
       ? `${icon} ${document.title || '제목 없음'}`
       : document.title || '제목 없음';
   }, [icon, document.title]);
 
+  // ── 아이콘 핸들러 ─────────────────────────────────────────
   async function handleSelectEmoji(emoji: string) {
     setIcon(emoji);
     setShowIconPicker(false);
@@ -140,6 +178,7 @@ export default function Editor({ document }: Props) {
     await updateDocument(document.id, { icon: null });
   }
 
+  // ── 커버 핸들러 ───────────────────────────────────────────
   async function handleSetCover(value: string) {
     setCoverUrl(value);
     setShowCoverPanel(false);
@@ -155,11 +194,41 @@ export default function Editor({ document }: Props) {
   }
 
   function handleApplyCoverUrl() {
-    if (coverInput.trim()) {
-      handleSetCover(coverInput.trim());
+    if (coverInput.trim()) handleSetCover(coverInput.trim());
+  }
+
+  // ── 즐겨찾기 ─────────────────────────────────────────────
+  async function handleToggleFavorite() {
+    const next = !isFavorite;
+    setIsFavorite(next);
+    await updateDocument(document.id, { is_favorite: next });
+  }
+
+  // ── Visibility 토글 ───────────────────────────────────────
+  async function handleToggleVisibility() {
+    const next = visibility === 'private' ? 'default' : 'private';
+    setVisibility(next);
+
+    // 현재 에디터 콘텐츠
+    const currentContent = editor?.getJSON() as Record<string, unknown> | undefined;
+
+    if (next === 'private' && encKeyRef.current && currentContent) {
+      // 비공개로 전환 → 암호화 후 저장
+      const encrypted = await encryptContent(currentContent, encKeyRef.current);
+      await updateDocument(document.id, {
+        visibility: next,
+        content: encrypted as unknown as Record<string, unknown>,
+      });
+    } else {
+      // 공개로 전환 → 평문 저장
+      await updateDocument(document.id, {
+        visibility: next,
+        content: currentContent ?? null,
+      });
     }
   }
 
+  // ── TipTap 에디터 ─────────────────────────────────────────
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -172,17 +241,34 @@ export default function Editor({ document }: Props) {
       ListItemEnterFix,
       SlashCommandExtension,
     ],
-    content: document.content ?? '',
+    content: '',
     editorProps: {
       attributes: {
         class: 'prose prose-gray max-w-none focus:outline-none min-h-[60vh]',
       },
     },
     onUpdate: ({ editor }) => {
-      save({ content: editor.getJSON() as Record<string, unknown> });
+      const content = editor.getJSON() as Record<string, unknown>;
+
+      if (visibilityRef.current === 'private' && encKeyRef.current) {
+        // 비공개 문서 → 암호화 후 저장
+        encryptContent(content, encKeyRef.current).then((encrypted) => {
+          save({ content: encrypted as unknown as Record<string, unknown> });
+        });
+      } else {
+        save({ content });
+      }
     },
     immediatelyRender: false,
   });
+
+  // ── 복호화 완료 후 에디터에 콘텐츠 주입 ──────────────────
+  useEffect(() => {
+    if (contentReady && editor) {
+      editor.commands.setContent(editorInitContentRef.current ?? '');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentReady, editor]);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -199,7 +285,7 @@ export default function Editor({ document }: Props) {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={coverUrl} alt="cover" className="w-full h-40 object-cover" />
           )}
-          {/* Favorite button (always visible on cover) */}
+          {/* Favorite button */}
           <div className="absolute top-2 right-3">
             <button
               onClick={handleToggleFavorite}
@@ -242,7 +328,7 @@ export default function Editor({ document }: Props) {
       ) : null}
 
       <div className="px-8 py-10">
-        {/* Add cover button + Favorite toggle (top-right, when no cover) */}
+        {/* 상단 우측: 즐겨찾기 + 커버 추가 + 비공개 토글 */}
         {!coverUrl && (
           <div className="flex justify-end items-center gap-3 mb-1">
             <button
@@ -254,12 +340,10 @@ export default function Editor({ document }: Props) {
               }`}
               aria-label={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
             >
-              <Star
-                size={13}
-                className={isFavorite ? 'fill-yellow-400' : ''}
-              />
+              <Star size={13} className={isFavorite ? 'fill-yellow-400' : ''} />
               {isFavorite ? '즐겨찾기됨' : '즐겨찾기'}
             </button>
+
             <div className="relative">
               <button
                 onClick={() => setShowCoverPanel((v) => !v)}
@@ -283,6 +367,44 @@ export default function Editor({ document }: Props) {
                 </div>
               )}
             </div>
+
+            {/* 비공개 토글 */}
+            <button
+              onClick={handleToggleVisibility}
+              className={`flex items-center gap-1 text-xs transition-colors ${
+                visibility === 'private'
+                  ? 'text-[#0054FF] hover:text-[#0044DD]'
+                  : 'text-gray-400 hover:text-gray-500'
+              }`}
+              title={visibility === 'private' ? '비공개 (클릭하여 공개 전환)' : '공개 (클릭하여 비공개 전환)'}
+            >
+              {visibility === 'private' ? (
+                <><Lock size={13} />비공개</>
+              ) : (
+                <><Globe size={13} />공개</>
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* 커버 있을 때도 비공개 토글 표시 */}
+        {coverUrl && (
+          <div className="flex justify-end mb-1">
+            <button
+              onClick={handleToggleVisibility}
+              className={`flex items-center gap-1 text-xs transition-colors ${
+                visibility === 'private'
+                  ? 'text-[#0054FF] hover:text-[#0044DD]'
+                  : 'text-gray-400 hover:text-gray-500'
+              }`}
+              title={visibility === 'private' ? '비공개 (클릭하여 공개 전환)' : '공개 (클릭하여 비공개 전환)'}
+            >
+              {visibility === 'private' ? (
+                <><Lock size={13} />비공개</>
+              ) : (
+                <><Globe size={13} />공개</>
+              )}
+            </button>
           </div>
         )}
 
@@ -354,14 +476,30 @@ export default function Editor({ document }: Props) {
           )}
         </div>
 
-        {/* Editor */}
-        <EditorContent editor={editor} />
+        {/* 콘텐츠 로딩 중 스켈레톤 */}
+        {!contentReady ? (
+          <div className="space-y-3 animate-pulse">
+            <div className="h-4 bg-gray-100 rounded w-3/4" />
+            <div className="h-4 bg-gray-100 rounded w-full" />
+            <div className="h-4 bg-gray-100 rounded w-5/6" />
+          </div>
+        ) : (
+          <EditorContent editor={editor} />
+        )}
+
+        {/* 비공개 문서 안내 배너 */}
+        {visibility === 'private' && contentReady && (
+          <div className="mt-6 flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-100 text-xs text-[#0054FF]">
+            <Lock size={12} />
+            이 문서는 비공개입니다. 내용이 암호화되어 DB에 저장됩니다.
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// Sub-component for the cover panel (shared between "add" and "change" buttons)
+// ── 커버 패널 서브 컴포넌트 ────────────────────────────────────────────
 function CoverPanel({
   coverInput,
   setCoverInput,

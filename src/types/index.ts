@@ -10,6 +10,7 @@ export type Document = {
   cover_url: string | null;
   is_favorite: boolean;
   sort_order: number;
+  visibility: 'default' | 'private' | 'public';
   created_at: string;
   updated_at: string;
 };
