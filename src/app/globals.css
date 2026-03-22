@@ -55,7 +55,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.452 0.266 263.8);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -66,7 +66,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.452 0.266 263.8);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -75,12 +75,12 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.452 0.266 263.8);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: oklch(0.452 0.266 263.8);
 }
 
 .dark {
@@ -127,4 +127,24 @@
   html {
     @apply font-sans;
   }
+}
+
+/* TipTap prose styles */
+.prose h1 { @apply text-3xl font-bold text-gray-900 mt-8 mb-3; }
+.prose h2 { @apply text-2xl font-semibold text-gray-900 mt-6 mb-2; }
+.prose h3 { @apply text-xl font-semibold text-gray-900 mt-5 mb-2; }
+.prose p { @apply text-base text-gray-700 leading-relaxed mb-3; }
+.prose ul { @apply list-disc list-inside mb-3 space-y-1; }
+.prose ol { @apply list-decimal list-inside mb-3 space-y-1; }
+.prose li { @apply text-gray-700; }
+.prose blockquote { @apply border-l-4 border-[#0054FF] pl-4 italic text-gray-600 my-4; }
+.prose hr { @apply border-border my-6; }
+
+/* TipTap placeholder */
+.tiptap p.is-editor-empty:first-child::before,
+.tiptap h1.is-empty::before,
+.tiptap h2.is-empty::before,
+.tiptap h3.is-empty::before {
+  content: attr(data-placeholder);
+  @apply text-gray-300 pointer-events-none float-left h-0;
 }
