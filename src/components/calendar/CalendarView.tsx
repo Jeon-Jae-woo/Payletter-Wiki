@@ -247,6 +247,7 @@ export default function CalendarView() {
               hideNavigation
               classNames={{
                 month_grid: 'w-full border-l border-gray-200',
+                month_caption: 'hidden',
                 week: 'grid grid-cols-7',
                 weeks: 'w-full',
                 month: 'w-full',
