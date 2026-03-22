@@ -144,6 +144,22 @@
 .prose blockquote { @apply border-l-4 border-[#0054FF] pl-4 italic text-gray-600 my-4; }
 .prose hr { @apply border-border my-6; }
 
+/* TipTap task list (할 일 목록) */
+.prose ul[data-type="taskList"] { @apply list-none pl-0 mb-3 space-y-1; }
+.prose ul[data-type="taskList"] li { @apply flex items-start gap-2; }
+.prose ul[data-type="taskList"] li > label {
+  @apply flex items-center mt-0.5 shrink-0;
+}
+.prose ul[data-type="taskList"] li > label input[type="checkbox"] {
+  @apply w-4 h-4 rounded border-gray-300 accent-[#0054FF] cursor-pointer;
+}
+.prose ul[data-type="taskList"] li > div {
+  @apply flex-1 leading-relaxed;
+}
+.prose ul[data-type="taskList"] li[data-checked="true"] > div {
+  @apply line-through text-gray-400;
+}
+
 /* TipTap placeholder */
 .tiptap p.is-editor-empty:first-child::before,
 .tiptap h1.is-empty::before,

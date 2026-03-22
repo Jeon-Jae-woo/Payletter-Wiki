@@ -6,6 +6,7 @@ import 'react-day-picker/style.css';
 import { ChevronLeft, ChevronRight, X, Calendar } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getEventsForMonth } from '@/lib/calendar';
+import { getTodosForMonth } from '@/lib/todos';
 import EventCreateModal from './EventCreateModal';
 import type { CalendarEvent } from '@/types';
 
@@ -55,6 +56,7 @@ export default function CalendarView() {
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => getMondayOfWeek(new Date()));
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [eventsByDate, setEventsByDate] = useState<Record<string, CalendarEvent[]>>({});
+  const [todoCountByDate, setTodoCountByDate] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [modalDate, setModalDate] = useState<Date | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -69,10 +71,20 @@ export default function CalendarView() {
 
   const loadEvents = useCallback(async (date: Date) => {
     setIsLoading(true);
-    const { data } = await getEventsForMonth(date.getFullYear(), date.getMonth() + 1);
-    const loaded = (data ?? []) as CalendarEvent[];
+    const [{ data: evData }, { data: todoData }] = await Promise.all([
+      getEventsForMonth(date.getFullYear(), date.getMonth() + 1),
+      getTodosForMonth(date.getFullYear(), date.getMonth() + 1),
+    ]);
+    const loaded = (evData ?? []) as CalendarEvent[];
     setEvents(loaded);
     setEventsByDate(groupEventsByDate(loaded));
+
+    // due_date 기준으로 미완료 할 일 개수 집계
+    const countMap: Record<string, number> = {};
+    for (const t of (todoData ?? []) as { due_date: string | null }[]) {
+      if (t.due_date) countMap[t.due_date] = (countMap[t.due_date] ?? 0) + 1;
+    }
+    setTodoCountByDate(countMap);
     setIsLoading(false);
   }, []);
 
@@ -248,6 +260,7 @@ export default function CalendarView() {
                 Day: ({ day, modifiers }) => {
                   const key = formatDateKey(day.date);
                   const dayEvents = eventsByDate[key] ?? [];
+                  const todoCount = todoCountByDate[key] ?? 0;
                   const isToday = modifiers.today === true;
                   const isOutside = modifiers.outside === true;
                   const dayOfWeek = day.date.getDay();
@@ -295,6 +308,14 @@ export default function CalendarView() {
                           <span className="text-xs text-gray-400 px-1">+{dayEvents.length - 3}개</span>
                         )}
                       </div>
+                      {/* 할 일 뱃지 */}
+                      {todoCount > 0 && (
+                        <div className="mt-auto pt-0.5">
+                          <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-400 px-1">
+                            ☐ {todoCount}
+                          </span>
+                        </div>
+                      )}
                     </td>
                   );
                 },

@@ -73,6 +73,14 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
       editor.chain().focus().deleteRange(range).setHorizontalRule().run();
     },
   },
+  {
+    title: '할 일 목록',
+    description: '체크박스 할 일 목록',
+    icon: '☑',
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).toggleTaskList().run();
+    },
+  },
 ];
 
 const SlashCommandExtension = Extension.create({

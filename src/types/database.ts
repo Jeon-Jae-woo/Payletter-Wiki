@@ -1,4 +1,4 @@
-import type { Document, CalendarEvent, EventDocumentLink } from './index';
+import type { Document, CalendarEvent, EventDocumentLink, Todo } from './index';
 
 export type Database = {
   public: {
@@ -42,6 +42,22 @@ export type Database = {
         Row: EventDocumentLink;
         Insert: EventDocumentLink;
         Update: never;
+        Relationships: [];
+      };
+      todos: {
+        Row: Todo;
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          is_done?: boolean;
+          due_date?: string | null;
+          document_id?: string | null;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<Todo, 'id' | 'user_id' | 'created_at' | 'document'>>;
         Relationships: [];
       };
     };

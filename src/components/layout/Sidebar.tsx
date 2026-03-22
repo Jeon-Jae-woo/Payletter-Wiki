@@ -16,6 +16,7 @@ import {
   ChevronDown,
   CalendarDays,
   Lock,
+  CheckSquare,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -35,6 +36,7 @@ const workspaceNav: NavItem[] = [
   { label: '즐겨찾기', icon: <Star size={16} />, href: '/favorites' },
   { label: '검색', icon: <Search size={16} />, href: '/search' },
   { label: '캘린더', icon: <CalendarDays size={16} />, href: '/calendar' },
+  { label: '할 일', icon: <CheckSquare size={16} />, href: '/todo' },
 ];
 
 function DocRow({

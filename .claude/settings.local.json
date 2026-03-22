@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx:*)",
+      "Bash(mkdir -p /c/Users/jaewoo/Desktop/wiki/src/app/\\\\\\(wiki\\\\\\))",
+      "Bash(mkdir -p /c/Users/jaewoo/Desktop/wiki/src/components/layout)",
+      "Bash(start:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(node:*)",
+      "Bash(echo \"EXIT CODE: $?\")",
+      "Bash(ls \"C:/Users/jaewoo/Desktop/wiki/src/app/\\(wiki\\)\" -la)",
+      "Bash(for kw:*)",
+      "Bash(do)",
+      "Bash(grep -qi \"$kw\" supabase/migrations/001_init_schema.sql)",
+      "Bash(echo \"OK   $kw\")",
+      "Bash(echo \"MISS $kw\")",
+      "Bash(taskkill //PID 11832 //F)",
+      "Bash(taskkill /PID 23580 /F)",
+      "Bash(cmd /c \"taskkill /PID 23580 /F\")",
+      "mcp__ide__getDiagnostics",
+      "Bash(xargs grep:*)",
+      "Bash(ls C:/Users/jaewoo/Desktop/wiki/src/app/\\\\\\(wiki\\\\\\)/favorites/)",
+      "Bash(ls C:/Users/jaewoo/Desktop/wiki/src/app/\\\\\\(wiki\\\\\\)/private/)",
+      "Bash(cd:*)"
+    ]
+  }
+}

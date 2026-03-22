@@ -32,3 +32,17 @@ export type EventDocumentLink = {
   event_id: string;
   document_id: string;
 };
+
+export type Todo = {
+  id: string;
+  user_id: string;
+  title: string;
+  is_done: boolean;
+  due_date: string | null;       // 'YYYY-MM-DD'
+  document_id: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  // join
+  document?: { id: string; title: string; icon: string | null } | null;
+};
