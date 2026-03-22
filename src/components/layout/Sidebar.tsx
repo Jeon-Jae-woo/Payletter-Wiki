@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   House,
   Clock,
@@ -17,11 +17,12 @@ import {
   CalendarDays,
   Lock,
   CheckSquare,
+  MoreHorizontal,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/lib/supabase';
-import { getRootDocuments, createDocument, getChildDocuments, getPrivateDocuments } from '@/lib/documents';
+import { getRootDocuments, createDocument, getChildDocuments, getPrivateDocuments, deleteDocument } from '@/lib/documents';
 import type { Document } from '@/types';
 
 type NavItem = {
@@ -55,6 +56,8 @@ function DocRow({
   const [isHovered, setIsHovered] = useState(false);
   const [children, setChildren] = useState<Document[] | null>(null);
   const [loadingChildren, setLoadingChildren] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // 이 문서의 하위에 새 문서가 생성되면 children에 추가하고 펼치기
   useEffect(() => {
@@ -67,6 +70,28 @@ function DocRow({
     window.addEventListener('child-document-created', handleChildCreated);
     return () => window.removeEventListener('child-document-created', handleChildCreated);
   }, [doc.id]);
+
+  // children에서 삭제된 문서 제거
+  useEffect(() => {
+    function handleDocDeleted(e: Event) {
+      const { id } = (e as CustomEvent<{ id: string }>).detail;
+      setChildren((prev) => prev ? prev.filter((c) => c.id !== id) : null);
+    }
+    window.addEventListener('document-deleted', handleDocDeleted);
+    return () => window.removeEventListener('document-deleted', handleDocDeleted);
+  }, []);
+
+  // click-outside로 메뉴 닫기
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [menuOpen]);
 
   // Cap indent: depth 0 → pl-0, depth 1 → pl-3, depth 2+ → pl-6
   const paddingLeft = depth === 0 ? 0 : depth === 1 ? 12 : 24;
@@ -104,6 +129,13 @@ function DocRow({
   async function handleCreateChildHere(e: React.MouseEvent) {
     e.stopPropagation();
     onCreateChild(doc.id);
+  }
+
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    setMenuOpen(false);
+    await deleteDocument(doc.id);
+    window.dispatchEvent(new CustomEvent('document-deleted', { detail: { id: doc.id, parentId: doc.parent_id } }));
   }
 
   // Hide chevron only if we've fetched and there are no children
@@ -149,7 +181,7 @@ function DocRow({
         <span className="flex-1 truncate overflow-hidden">{doc.title}</span>
 
         {/* Add child button — visible on hover */}
-        {isHovered && (
+        {(isHovered || menuOpen) && (
           <button
             onClick={handleCreateChildHere}
             className="shrink-0 flex items-center justify-center w-5 h-5 rounded hover:bg-blue-100 transition-colors text-gray-400 hover:text-[#0054FF]"
@@ -157,6 +189,29 @@ function DocRow({
           >
             <Plus size={13} />
           </button>
+        )}
+
+        {/* More options button and dropdown — visible on hover */}
+        {(isHovered || menuOpen) && (
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
+              className="shrink-0 flex items-center justify-center w-5 h-5 rounded hover:bg-blue-100 transition-colors text-gray-400 hover:text-[#0054FF]"
+              aria-label="더 보기"
+            >
+              <MoreHorizontal size={13} />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-full mt-0.5 z-50 w-32 bg-white border border-gray-200 rounded-lg shadow-lg py-1">
+                <button
+                  onClick={handleDelete}
+                  className="w-full text-left px-3 py-1.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  삭제
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -192,6 +247,7 @@ function SkeletonRows() {
 
 export default function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [privateDocuments, setPrivateDocuments] = useState<Document[]>([]);
@@ -266,6 +322,20 @@ export default function Sidebar() {
     window.addEventListener('document-icon-changed', handleIconChange);
     return () => window.removeEventListener('document-icon-changed', handleIconChange);
   }, []);
+
+  // 문서 삭제 시 사이드바에서 제거
+  useEffect(() => {
+    function handleDocDeleted(e: Event) {
+      const { id } = (e as CustomEvent<{ id: string; parentId: string | null }>).detail;
+      setDocuments((prev) => prev.filter((d) => d.id !== id));
+      setPrivateDocuments((prev) => prev.filter((d) => d.id !== id));
+      if (pathname === `/documents/${id}`) {
+        router.push('/');
+      }
+    }
+    window.addEventListener('document-deleted', handleDocDeleted);
+    return () => window.removeEventListener('document-deleted', handleDocDeleted);
+  }, [pathname, router]);
 
   // 에디터에서 visibility 변경 시 사이드바 섹션 간 이동
   useEffect(() => {
