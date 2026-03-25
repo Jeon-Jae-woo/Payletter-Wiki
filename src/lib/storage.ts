@@ -8,6 +8,9 @@ export async function uploadImage(
   file: File,
   userId: string
 ): Promise<{ url: string | null; error: string | null }> {
+  if (!userId) {
+    return { url: null, error: '사용자 인증이 필요합니다.' };
+  }
   if (file.size > MAX_SIZE) {
     return { url: null, error: '파일 크기는 10MB 이하여야 합니다.' };
   }

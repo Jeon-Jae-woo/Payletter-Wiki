@@ -14,16 +14,15 @@ export const ImageBlockNode = Image.extend({
 
   renderHTML({ HTMLAttributes }) {
     const { caption, align, src, alt } = HTMLAttributes;
-    const figure = ['figure', { class: 'image-block', 'data-align': align ?? 'center' }];
-    const img = ['img', { src, alt: alt ?? '', draggable: 'false' }];
+    const img: [string, Record<string, string>] = ['img', { src: src ?? '', alt: alt ?? '', draggable: 'false' }];
 
     if (caption) {
-      return [...figure, img, ['figcaption', {}, caption]] as unknown as [string, ...unknown[]];
+      return ['figure', { class: 'image-block', 'data-align': align ?? 'center' }, img, ['figcaption', {}, caption]];
     }
-    return [...figure, img] as unknown as [string, ...unknown[]];
+    return ['figure', { class: 'image-block', 'data-align': align ?? 'center' }, img];
   },
 
   parseHTML() {
-    return [{ tag: 'figure.image-block > img' }];
+    return [{ tag: 'figure.image-block img' }];
   },
 });

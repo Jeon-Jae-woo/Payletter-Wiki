@@ -23,22 +23,29 @@ export default function ImageUploadModal({ userId, onInsert, onClose }: Props) {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function applyFile(f: File) {
+  const applyFile = useCallback((f: File) => {
     setError(null);
     setFile(f);
-    const prev = preview;
-    if (prev) URL.revokeObjectURL(prev);
-    setPreview(URL.createObjectURL(f));
-    if (!alt) setAlt(f.name.replace(/\.[^.]+$/, ''));
+    setPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(f);
+    });
+    setAlt((prev) => prev || f.name.replace(/\.[^.]+$/, ''));
+  }, []);
+
+  function handleClose() {
+    if (preview) URL.revokeObjectURL(preview);
+    onClose();
   }
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
     const dropped = e.dataTransfer.files[0];
     if (dropped) applyFile(dropped);
+  // applyFile은 preview/alt를 클로저로 캡처하므로 의존성에 포함
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preview, alt]);
+  }, [applyFile]);
 
   async function handleInsert() {
     setError(null);
@@ -60,7 +67,7 @@ export default function ImageUploadModal({ userId, onInsert, onClose }: Props) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
       <div
         className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
@@ -72,7 +79,7 @@ export default function ImageUploadModal({ userId, onInsert, onClose }: Props) {
             이미지 삽입
           </h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <X size={16} />
@@ -185,7 +192,7 @@ export default function ImageUploadModal({ userId, onInsert, onClose }: Props) {
           <div className="flex justify-end gap-2 pt-1">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               취소

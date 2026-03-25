@@ -101,7 +101,7 @@ export default function Editor({ document }: Props) {
 
   // ── Image Upload Modal ─────────────────────────────────────
   const [showImageModal, setShowImageModal] = useState(false);
-  const userIdRef = useRef<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // ── Cover ──────────────────────────────────────────────────
   const [coverUrl, setCoverUrl] = useState<string | null>(document.cover_url ?? null);
@@ -118,7 +118,7 @@ export default function Editor({ document }: Props) {
       const { data: { user } } = await supabase.auth.getUser();
       const key: string | null = user?.user_metadata?.enc_key ?? null;
       encKeyRef.current = key;
-      userIdRef.current = user?.id ?? null;
+      if (!cancelled) setUserId(user?.id ?? null);
 
       if (isEncryptedContent(document.content) && key) {
         try {
@@ -555,9 +555,9 @@ export default function Editor({ document }: Props) {
         )}
 
         {/* 이미지 업로드 모달 */}
-        {showImageModal && (
+        {showImageModal && userId && (
           <ImageUploadModal
-            userId={userIdRef.current ?? ''}
+            userId={userId}
             onInsert={(src, alt) => {
               editor?.commands.insertContent({
                 type: 'imageBlock',
