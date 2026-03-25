@@ -24,6 +24,7 @@ export type CalendarEvent = {
   end_at: string | null;
   all_day: boolean;
   color: string | null;
+  priority: 'high' | 'medium' | 'low';
   created_at: string;
   updated_at: string;
 };

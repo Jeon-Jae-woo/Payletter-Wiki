@@ -43,14 +43,14 @@ export default function TodoCreateInput({ onAdd }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 bg-white focus-within:border-[#0054FF] transition-colors">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus-within:border-[#0054FF] transition-colors">
         <Plus size={16} className="shrink-0 text-gray-400" />
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="할 일을 입력하세요..."
-          className="flex-1 text-sm outline-none bg-transparent text-gray-800 placeholder-gray-400"
+          className="flex-1 text-sm outline-none bg-transparent text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder:text-gray-500"
         />
         <button
           type="submit"
@@ -70,7 +70,7 @@ export default function TodoCreateInput({ onAdd }: Props) {
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="text-xs text-gray-500 outline-none bg-transparent cursor-pointer"
+            className="text-xs text-gray-500 dark:text-gray-400 outline-none bg-transparent cursor-pointer"
           />
         </label>
 
@@ -92,7 +92,7 @@ export default function TodoCreateInput({ onAdd }: Props) {
             <button
               type="button"
               onClick={() => setShowDocSearch((v) => !v)}
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
               <FileText size={13} />
               위키 연결
@@ -100,14 +100,14 @@ export default function TodoCreateInput({ onAdd }: Props) {
           )}
 
           {showDocSearch && (
-            <div className="absolute left-0 top-6 z-20 bg-white border border-border rounded-xl shadow-lg p-2 w-56">
+            <div className="absolute left-0 top-6 z-20 bg-white dark:bg-gray-800 border border-border rounded-xl shadow-lg p-2 w-56">
               <input
                 type="text"
                 value={docSearch}
                 onChange={(e) => handleDocSearch(e.target.value)}
                 placeholder="문서 검색..."
                 autoFocus
-                className="w-full text-xs px-2 py-1.5 border border-gray-200 rounded-lg outline-none focus:border-[#0054FF] mb-1.5"
+                className="w-full text-xs px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg outline-none focus:border-[#0054FF] mb-1.5 bg-transparent text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
               {docResults.length > 0 ? (
                 <ul className="space-y-0.5 max-h-40 overflow-y-auto">
@@ -116,7 +116,7 @@ export default function TodoCreateInput({ onAdd }: Props) {
                       <button
                         type="button"
                         onClick={() => handleSelectDoc(doc)}
-                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-xs text-gray-700 hover:bg-blue-50 hover:text-[#0054FF] transition-colors"
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-[#0054FF] transition-colors"
                       >
                         {doc.icon ? (
                           <span className="text-sm">{doc.icon}</span>
@@ -129,7 +129,7 @@ export default function TodoCreateInput({ onAdd }: Props) {
                   ))}
                 </ul>
               ) : docSearch ? (
-                <p className="text-xs text-gray-400 text-center py-2">검색 결과 없음</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-2">검색 결과 없음</p>
               ) : null}
             </div>
           )}

@@ -35,8 +35,8 @@ const SlashCommandMenu = forwardRef<{ onKeyDown: (props: { event: KeyboardEvent 
     if (items.length === 0) return null;
 
     return (
-      <div className="z-50 min-w-[220px] overflow-hidden rounded-lg border border-border bg-white shadow-lg p-1">
-        <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+      <div className="z-50 min-w-[220px] overflow-hidden rounded-lg border border-border bg-white dark:bg-gray-800 shadow-lg p-1">
+        <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
           블록 유형
         </p>
         {items.map((item, index) => (
@@ -45,16 +45,16 @@ const SlashCommandMenu = forwardRef<{ onKeyDown: (props: { event: KeyboardEvent 
             onClick={() => command(item)}
             className={`flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left transition-colors ${
               index === selectedIndex
-                ? 'bg-blue-50 text-[#0054FF]'
-                : 'text-gray-700 hover:bg-gray-50'
+                ? 'bg-blue-50 dark:bg-blue-950 text-[#0054FF]'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-border bg-white text-xs font-bold text-gray-600">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-border bg-white dark:bg-gray-700 text-xs font-bold text-gray-600 dark:text-gray-300">
               {item.icon}
             </span>
             <div>
               <p className="text-sm font-medium leading-none">{item.title}</p>
-              <p className="mt-0.5 text-xs text-gray-400">{item.description}</p>
+              <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{item.description}</p>
             </div>
           </button>
         ))}

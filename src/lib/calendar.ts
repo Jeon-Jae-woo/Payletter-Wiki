@@ -23,6 +23,7 @@ export async function createEvent(
     end_at?: string;
     all_day?: boolean;
     color?: string;
+    priority?: 'high' | 'medium' | 'low';
   },
   documentIds: string[] = []
 ) {
@@ -40,6 +41,38 @@ export async function createEvent(
     );
   }
   return { data: event, error: null };
+}
+
+// Update an event and replace linked documents
+export async function updateEvent(
+  id: string,
+  data: {
+    title?: string;
+    description?: string;
+    start_at?: string;
+    end_at?: string;
+    all_day?: boolean;
+    color?: string;
+    priority?: 'high' | 'medium' | 'low';
+  },
+  documentIds: string[] = []
+) {
+  const { data: rawEvent, error } = await supabase
+    .from('calendar_events')
+    .update(data)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error || !rawEvent) return { data: null, error };
+
+  // Replace all linked documents
+  await supabase.from('event_document_links').delete().eq('event_id', id);
+  if (documentIds.length > 0) {
+    await supabase.from('event_document_links').insert(
+      documentIds.map((document_id) => ({ event_id: id, document_id }))
+    );
+  }
+  return { data: rawEvent as CalendarEvent, error: null };
 }
 
 // Delete an event

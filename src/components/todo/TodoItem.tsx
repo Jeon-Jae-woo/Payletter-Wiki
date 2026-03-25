@@ -85,14 +85,14 @@ export default function TodoItem({ todo, onUpdate, onDelete }: Props) {
   const due = todo.due_date ? formatDueDate(todo.due_date) : null;
 
   return (
-    <div className={`group flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors ${todo.is_done ? 'opacity-60' : ''}`}>
+    <div className={`group flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${todo.is_done ? 'opacity-60' : ''}`}>
       {/* 체크박스 */}
       <button
         onClick={handleToggle}
         className={`shrink-0 mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
           todo.is_done
             ? 'bg-[#0054FF] border-[#0054FF]'
-            : 'border-gray-300 hover:border-[#0054FF]'
+            : 'border-gray-300 dark:border-gray-600 hover:border-[#0054FF]'
         }`}
         aria-label={todo.is_done ? '완료 취소' : '완료'}
       >
@@ -116,12 +116,12 @@ export default function TodoItem({ todo, onUpdate, onDelete }: Props) {
               if (e.key === 'Enter') handleTitleSave();
               if (e.key === 'Escape') { setEditTitle(todo.title); setIsEditing(false); }
             }}
-            className="w-full text-sm text-gray-800 bg-transparent outline-none border-b border-[#0054FF]"
+            className="w-full text-sm text-gray-800 dark:text-gray-200 bg-transparent outline-none border-b border-[#0054FF]"
           />
         ) : (
           <p
             onClick={() => setIsEditing(true)}
-            className={`text-sm cursor-text ${todo.is_done ? 'line-through text-gray-400' : 'text-gray-800'}`}
+            className={`text-sm cursor-text ${todo.is_done ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200'}`}
           >
             {todo.title}
           </p>
@@ -167,20 +167,20 @@ export default function TodoItem({ todo, onUpdate, onDelete }: Props) {
             <div className="relative">
               <button
                 onClick={() => setShowDocSearch((v) => !v)}
-                className="flex items-center gap-1 text-xs text-gray-300 hover:text-[#0054FF] opacity-0 group-hover:opacity-100 transition-all"
+                className="flex items-center gap-1 text-xs text-gray-300 dark:text-gray-600 hover:text-[#0054FF] opacity-0 group-hover:opacity-100 transition-all"
               >
                 <FileText size={11} />
                 위키 연결
               </button>
               {showDocSearch && (
-                <div className="absolute left-0 top-5 z-20 bg-white border border-border rounded-xl shadow-lg p-2 w-52">
+                <div className="absolute left-0 top-5 z-20 bg-white dark:bg-gray-800 border border-border rounded-xl shadow-lg p-2 w-52">
                   <input
                     type="text"
                     value={docSearch}
                     onChange={(e) => handleDocSearch(e.target.value)}
                     placeholder="문서 검색..."
                     autoFocus
-                    className="w-full text-xs px-2 py-1.5 border border-gray-200 rounded-lg outline-none focus:border-[#0054FF] mb-1.5"
+                    className="w-full text-xs px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg outline-none focus:border-[#0054FF] mb-1.5 bg-transparent text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   />
                   {docResults.length > 0 ? (
                     <ul className="space-y-0.5 max-h-36 overflow-y-auto">
@@ -188,7 +188,7 @@ export default function TodoItem({ todo, onUpdate, onDelete }: Props) {
                         <li key={doc.id}>
                           <button
                             onClick={() => handleLinkDoc(doc)}
-                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-xs text-gray-700 hover:bg-blue-50 hover:text-[#0054FF]"
+                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-xs text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-[#0054FF]"
                           >
                             {doc.icon ? <span>{doc.icon}</span> : <FileText size={12} className="shrink-0" />}
                             <span className="truncate">{doc.title}</span>
@@ -197,7 +197,7 @@ export default function TodoItem({ todo, onUpdate, onDelete }: Props) {
                       ))}
                     </ul>
                   ) : docSearch ? (
-                    <p className="text-xs text-gray-400 text-center py-2">검색 결과 없음</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-2">검색 결과 없음</p>
                   ) : null}
                 </div>
               )}
@@ -209,7 +209,7 @@ export default function TodoItem({ todo, onUpdate, onDelete }: Props) {
       {/* 삭제 버튼 */}
       <button
         onClick={handleDelete}
-        className="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition-all"
+        className="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-lg text-gray-300 dark:text-gray-600 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-all"
         aria-label="삭제"
       >
         <Trash2 size={13} />

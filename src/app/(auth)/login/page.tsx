@@ -35,11 +35,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-border p-8 shadow-sm">
-      <h1 className="text-xl font-semibold text-gray-900 mb-6">로그인</h1>
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-border p-8 shadow-sm">
+      <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">로그인</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">이메일</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">이메일</label>
           <Input
             type="email"
             placeholder="you@example.com"
@@ -50,7 +50,7 @@ export default function LoginPage() {
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">비밀번호</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">비밀번호</label>
           <Input
             type="password"
             placeholder="••••••••"
@@ -69,7 +69,7 @@ export default function LoginPage() {
           {loading ? '로그인 중...' : '로그인'}
         </Button>
       </form>
-      <p className="mt-4 text-center text-sm text-gray-500">
+      <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
         계정이 없으신가요?{' '}
         <Link href="/signup" className="text-[#0054FF] hover:underline font-medium">
           회원가입

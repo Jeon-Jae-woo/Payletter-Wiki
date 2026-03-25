@@ -7,6 +7,8 @@ import Placeholder from '@tiptap/extension-placeholder';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import SlashCommandExtension from './SlashCommandExtension';
+import { PageLinkNode } from './PageLinkNode';
+import PageSearchModal from './PageSearchModal';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { updateDocument } from '@/lib/documents';
 import {
@@ -92,6 +94,9 @@ export default function Editor({ document }: Props) {
   // ── Favorite ───────────────────────────────────────────────
   const [isFavorite, setIsFavorite] = useState<boolean>(document.is_favorite ?? false);
 
+  // ── Page Link Modal ────────────────────────────────────────
+  const [showPageLinkModal, setShowPageLinkModal] = useState(false);
+
   // ── Cover ──────────────────────────────────────────────────
   const [coverUrl, setCoverUrl] = useState<string | null>(document.cover_url ?? null);
   const [showCoverPanel, setShowCoverPanel] = useState(false);
@@ -159,6 +164,15 @@ export default function Editor({ document }: Props) {
     if (showCoverPanel) window.addEventListener('mousedown', handleClickOutside);
     return () => window.removeEventListener('mousedown', handleClickOutside);
   }, [showCoverPanel]);
+
+  // ── 페이지 링크 슬래시 커맨드 이벤트 수신 ─────────────────
+  useEffect(() => {
+    function handleOpenPageLinkSearch() {
+      setShowPageLinkModal(true);
+    }
+    window.addEventListener('open-page-link-search', handleOpenPageLinkSearch);
+    return () => window.removeEventListener('open-page-link-search', handleOpenPageLinkSearch);
+  }, []);
 
   // ── 브라우저 탭 타이틀 ────────────────────────────────────
   useEffect(() => {
@@ -259,6 +273,7 @@ export default function Editor({ document }: Props) {
       }),
       ListItemEnterFix,
       SlashCommandExtension,
+      PageLinkNode,
       TaskList,
       TaskItem.configure({ nested: true }),
     ],
@@ -325,14 +340,14 @@ export default function Editor({ document }: Props) {
             <div className="relative">
               <button
                 onClick={() => setShowCoverPanel((v) => !v)}
-                className="px-3 py-1.5 text-xs font-medium bg-white/90 text-gray-700 rounded-lg shadow hover:bg-white transition-colors"
+                className="px-3 py-1.5 text-xs font-medium bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-300 rounded-lg shadow hover:bg-white dark:hover:bg-gray-800 transition-colors"
               >
                 커버 변경
               </button>
               {showCoverPanel && (
                 <div
                   ref={coverPanelRef}
-                  className="absolute z-20 bg-white border border-border rounded-xl shadow-lg p-3 w-72 right-0 bottom-9"
+                  className="absolute z-20 bg-white dark:bg-gray-800 border border-border rounded-xl shadow-lg p-3 w-72 right-0 bottom-9"
                 >
                   <CoverPanel
                     coverInput={coverInput}
@@ -357,7 +372,7 @@ export default function Editor({ document }: Props) {
               className={`flex items-center gap-1 text-xs transition-colors ${
                 isFavorite
                   ? 'text-yellow-400 hover:text-yellow-500'
-                  : 'text-gray-400 hover:text-gray-500'
+                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
               }`}
               aria-label={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
             >
@@ -368,7 +383,7 @@ export default function Editor({ document }: Props) {
             <div className="relative">
               <button
                 onClick={() => setShowCoverPanel((v) => !v)}
-                className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-500 transition-colors"
+                className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 transition-colors"
               >
                 <Camera size={13} />
                 커버 추가
@@ -376,7 +391,7 @@ export default function Editor({ document }: Props) {
               {showCoverPanel && (
                 <div
                   ref={coverPanelRef}
-                  className="absolute z-20 bg-white border border-border rounded-xl shadow-lg p-3 w-72 right-0 top-6"
+                  className="absolute z-20 bg-white dark:bg-gray-800 border border-border rounded-xl shadow-lg p-3 w-72 right-0 top-6"
                 >
                   <CoverPanel
                     coverInput={coverInput}
@@ -395,7 +410,7 @@ export default function Editor({ document }: Props) {
               className={`flex items-center gap-1 text-xs transition-colors ${
                 visibility === 'private'
                   ? 'text-[#0054FF] hover:text-[#0044DD]'
-                  : 'text-gray-400 hover:text-gray-500'
+                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
               }`}
               title={visibility === 'private' ? '비공개 (클릭하여 공개 전환)' : '공개 (클릭하여 비공개 전환)'}
             >
@@ -416,7 +431,7 @@ export default function Editor({ document }: Props) {
               className={`flex items-center gap-1 text-xs transition-colors ${
                 visibility === 'private'
                   ? 'text-[#0054FF] hover:text-[#0044DD]'
-                  : 'text-gray-400 hover:text-gray-500'
+                  : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
               }`}
               title={visibility === 'private' ? '비공개 (클릭하여 공개 전환)' : '공개 (클릭하여 비공개 전환)'}
             >
@@ -446,7 +461,7 @@ export default function Editor({ document }: Props) {
             <button
               ref={iconButtonRef as React.RefObject<HTMLButtonElement>}
               onClick={() => setShowIconPicker((v) => !v)}
-              className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
               <Smile size={16} />
               아이콘 추가
@@ -456,14 +471,14 @@ export default function Editor({ document }: Props) {
           {showIconPicker && (
             <div
               ref={iconPickerRef}
-              className="absolute z-20 bg-white border border-border rounded-xl shadow-lg p-3 w-72 top-full mt-1 left-0"
+              className="absolute z-20 bg-white dark:bg-gray-800 border border-border rounded-xl shadow-lg p-3 w-72 top-full mt-1 left-0"
             >
               <div className="grid grid-cols-8 gap-1 mb-3">
                 {EMOJI_LIST.map((emoji) => (
                   <button
                     key={emoji}
                     onClick={() => handleSelectEmoji(emoji)}
-                    className="text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+                    className="text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
                     {emoji}
                   </button>
@@ -471,7 +486,7 @@ export default function Editor({ document }: Props) {
               </div>
               <button
                 onClick={handleRemoveIcon}
-                className="w-full text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 py-1.5 rounded-lg transition-colors border border-gray-200"
+                className="w-full text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 py-1.5 rounded-lg transition-colors border border-gray-200 dark:border-gray-700"
               >
                 제거
               </button>
@@ -485,7 +500,7 @@ export default function Editor({ document }: Props) {
           defaultValue={document.title}
           placeholder="제목 없음"
           onChange={(e) => save({ title: e.target.value })}
-          className="w-full text-4xl font-bold text-gray-900 placeholder-gray-300 bg-transparent border-none outline-none mb-6 resize-none"
+          className="w-full text-4xl font-bold text-gray-900 dark:text-gray-100 placeholder-gray-300 dark:placeholder-gray-600 bg-transparent border-none outline-none mb-6 resize-none"
         />
 
         {/* Save status */}
@@ -500,12 +515,26 @@ export default function Editor({ document }: Props) {
         {/* 콘텐츠 로딩 중 스켈레톤 */}
         {!contentReady ? (
           <div className="space-y-3 animate-pulse">
-            <div className="h-4 bg-gray-100 rounded w-3/4" />
-            <div className="h-4 bg-gray-100 rounded w-full" />
-            <div className="h-4 bg-gray-100 rounded w-5/6" />
+            <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-3/4" />
+            <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-full" />
+            <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded w-5/6" />
           </div>
         ) : (
           <EditorContent editor={editor} />
+        )}
+
+        {/* 페이지 링크 검색 모달 */}
+        {showPageLinkModal && (
+          <PageSearchModal
+            onSelect={(doc) => {
+              editor?.commands.insertContent({
+                type: 'pageLink',
+                attrs: { id: doc.id, title: doc.title, icon: doc.icon },
+              });
+              setShowPageLinkModal(false);
+            }}
+            onClose={() => setShowPageLinkModal(false)}
+          />
         )}
 
         {/* 비공개 문서 안내 배너 */}
@@ -543,7 +572,7 @@ function CoverPanel({
           onChange={(e) => setCoverInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && onApply()}
           placeholder="이미지 URL을 입력하세요"
-          className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-[#0054FF] transition-colors"
+          className="flex-1 text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2.5 py-1.5 outline-none focus:border-[#0054FF] transition-colors bg-transparent text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500"
         />
         <button
           onClick={onApply}
@@ -567,7 +596,7 @@ function CoverPanel({
 
       <button
         onClick={onRemove}
-        className="w-full text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 py-1.5 rounded-lg transition-colors border border-gray-200"
+        className="w-full text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 py-1.5 rounded-lg transition-colors border border-gray-200 dark:border-gray-700"
       >
         제거
       </button>

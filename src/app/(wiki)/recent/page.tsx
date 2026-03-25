@@ -20,10 +20,10 @@ function relativeTime(dateStr: string): string {
 
 function SkeletonRow() {
   return (
-    <div className="flex items-center gap-4 px-4 py-3 rounded-lg border border-gray-100">
-      <div className="w-5 h-5 bg-gray-200 rounded animate-pulse shrink-0" />
-      <div className="flex-1 h-4 bg-gray-200 rounded animate-pulse" />
-      <div className="w-16 h-3 bg-gray-100 rounded animate-pulse" />
+    <div className="flex items-center gap-4 px-4 py-3 rounded-lg border border-gray-100 dark:border-gray-800">
+      <div className="w-5 h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse shrink-0" />
+      <div className="flex-1 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+      <div className="w-16 h-3 bg-gray-100 dark:bg-gray-700 rounded animate-pulse" />
     </div>
   );
 }
@@ -52,7 +52,7 @@ export default function RecentPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-8 py-10">
-      <h1 className="text-2xl font-bold mb-6 text-gray-900">최근 문서</h1>
+      <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">최근 문서</h1>
 
       {isLoading ? (
         <div className="space-y-2">
@@ -71,7 +71,7 @@ export default function RecentPage() {
             <li key={doc.id}>
               <button
                 onClick={() => router.push('/documents/' + doc.id)}
-                className="w-full flex items-center gap-4 px-4 py-3 rounded-lg text-left hover:bg-blue-50 hover:text-[#0054FF] transition-colors group"
+                className="w-full flex items-center gap-4 px-4 py-3 rounded-lg text-left hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-[#0054FF] transition-colors group"
               >
                 {doc.icon ? (
                   <span className="shrink-0 text-[18px] leading-none">{doc.icon}</span>
@@ -81,10 +81,10 @@ export default function RecentPage() {
                     className="shrink-0 text-gray-400 group-hover:text-[#0054FF] transition-colors"
                   />
                 )}
-                <span className="flex-1 truncate text-sm font-medium text-gray-800 group-hover:text-[#0054FF]">
+                <span className="flex-1 truncate text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-[#0054FF]">
                   {doc.title}
                 </span>
-                <span className="shrink-0 text-xs text-gray-400 group-hover:text-[#0054FF]/70">
+                <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500 group-hover:text-[#0054FF]/70">
                   {relativeTime(doc.updated_at)}
                 </span>
               </button>

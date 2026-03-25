@@ -38,35 +38,35 @@ export default function MainLayout({
       {/* Right: header + content */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Top header bar */}
-        <header className="flex items-center justify-between h-12 px-4 border-b border-border bg-white shrink-0">
+        <header className="flex items-center justify-between h-12 px-4 border-b border-border bg-white dark:bg-gray-900 shrink-0">
           {/* Breadcrumb area */}
-          <div className="flex items-center gap-1.5 text-sm text-gray-500">
-            <span className="text-gray-400">LetterWiki</span>
-            <span className="text-gray-300">/</span>
-            <span className="text-gray-700 font-medium">시작하기</span>
+          <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-gray-400 dark:text-gray-500">LetterWiki</span>
+            <span className="text-gray-300 dark:text-gray-600">/</span>
+            <span className="text-gray-700 dark:text-gray-300 font-medium">시작하기</span>
           </div>
 
           {/* Action buttons */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="flex items-center justify-center w-7 h-7 rounded-md text-gray-500 hover:bg-gray-100 transition-colors"
+              className="flex items-center justify-center w-7 h-7 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               aria-label="검색"
             >
               <Search size={16} />
             </button>
-            <button className="px-3 py-1 text-sm font-medium rounded-md border border-border text-gray-600 hover:bg-gray-50 transition-colors">
+            <button className="px-3 py-1 text-sm font-medium rounded-md border border-border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
               공유
             </button>
             <button
               onClick={handleLogout}
-              className="flex items-center justify-center w-7 h-7 rounded-md text-gray-500 hover:bg-gray-100 transition-colors"
+              className="flex items-center justify-center w-7 h-7 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               aria-label="로그아웃"
             >
               <LogOut size={16} />
             </button>
             <button
-              className="flex items-center justify-center w-7 h-7 rounded-md text-gray-500 hover:bg-gray-100 transition-colors"
+              className="flex items-center justify-center w-7 h-7 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               aria-label="더 보기"
             >
               <MoreHorizontal size={16} />

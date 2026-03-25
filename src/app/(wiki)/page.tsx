@@ -27,10 +27,10 @@ export default function WikiHomePage() {
       {/* Hero */}
       <div className="mb-10">
         <div className="text-5xl mb-5 select-none">📝</div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">
           시작하기
         </h1>
-        <p className="text-base text-gray-500 leading-relaxed max-w-xl">
+        <p className="text-base text-gray-500 dark:text-gray-400 leading-relaxed max-w-xl">
           LetterWiki에 오신 것을 환영합니다 — 노트, 위키, 캘린더를 한곳에서 관리하는 나만의 워크스페이스입니다. 새 페이지를 작성하거나 아래 기능을 둘러보세요.
         </p>
       </div>
@@ -40,16 +40,16 @@ export default function WikiHomePage() {
         {features.map((card) => (
           <div
             key={card.title}
-            className="flex flex-col gap-3 p-5 rounded-lg border border-border bg-white hover:border-[#0054FF] transition-colors cursor-default"
+            className="flex flex-col gap-3 p-5 rounded-lg border border-border bg-white dark:bg-gray-800 hover:border-[#0054FF] transition-colors cursor-default"
           >
-            <div className="flex items-center justify-center w-9 h-9 rounded-md bg-blue-50">
+            <div className="flex items-center justify-center w-9 h-9 rounded-md bg-blue-50 dark:bg-blue-950">
               {card.icon}
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-gray-900 mb-1">
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
                 {card.title}
               </h2>
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
                 {card.description}
               </p>
             </div>

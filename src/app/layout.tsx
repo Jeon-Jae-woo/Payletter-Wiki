@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ThemeProvider from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   title: "LetterWiki",
@@ -22,8 +23,19 @@ export default function RootLayout({
           :root { --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
           body { font-family: var(--font-sans); }
         `}</style>
+        {/* Prevent dark mode flash on initial load */}
+        <script dangerouslySetInnerHTML={{__html: `
+  (function() {
+    var theme = localStorage.getItem('theme') || 'light';
+    if (theme === 'dark') document.documentElement.classList.add('dark');
+  })();
+`}} />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

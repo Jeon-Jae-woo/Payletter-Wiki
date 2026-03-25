@@ -81,6 +81,15 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
       editor.chain().focus().deleteRange(range).toggleTaskList().run();
     },
   },
+  {
+    title: '페이지 링크',
+    description: '다른 페이지를 인라인으로 연결',
+    icon: '🔗',
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run();
+      window.dispatchEvent(new CustomEvent('open-page-link-search'));
+    },
+  },
 ];
 
 const SlashCommandExtension = Extension.create({

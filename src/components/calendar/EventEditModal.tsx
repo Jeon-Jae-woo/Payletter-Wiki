@@ -2,35 +2,45 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
-import { createEvent } from '@/lib/calendar';
+import { updateEvent } from '@/lib/calendar';
 import { searchDocuments } from '@/lib/documents';
 import type { CalendarEvent, Document } from '@/types';
 
+type LinkedDoc = { id: string; title: string; icon: string | null };
+
 type Props = {
-  selectedDate: Date;
+  event: CalendarEvent;
+  initialLinkedDocs: LinkedDoc[];
   onClose: () => void;
   onSuccess: (event: CalendarEvent) => void;
-  userId: string;
 };
 
-function formatDateValue(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+function formatDateValue(isoString: string): string {
+  const d = new Date(isoString);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
-export default function EventCreateModal({ selectedDate, onClose, onSuccess, userId }: Props) {
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState(formatDateValue(selectedDate));
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime, setEndTime] = useState('10:00');
-  const [allDay, setAllDay] = useState(false);
-  const [priority, setPriority] = useState<'high' | 'medium' | 'low'>('medium');
-  const [description, setDescription] = useState('');
+function formatTimeValue(isoString: string): string {
+  const d = new Date(isoString);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+export default function EventEditModal({ event, initialLinkedDocs, onClose, onSuccess }: Props) {
+  const [title, setTitle] = useState(event.title);
+  const [date, setDate] = useState(formatDateValue(event.start_at));
+  const [startTime, setStartTime] = useState(event.all_day ? '09:00' : formatTimeValue(event.start_at));
+  const [endTime, setEndTime] = useState(
+    event.end_at && !event.all_day ? formatTimeValue(event.end_at) : '10:00'
+  );
+  const [allDay, setAllDay] = useState(event.all_day);
+  const [priority, setPriority] = useState<'high' | 'medium' | 'low'>(event.priority ?? 'medium');
+  const [description, setDescription] = useState(event.description ?? '');
+  const [linkedDocs, setLinkedDocs] = useState<LinkedDoc[]>(initialLinkedDocs);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Document[]>([]);
-  const [linkedDocs, setLinkedDocs] = useState<Document[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,7 +48,6 @@ export default function EventCreateModal({ selectedDate, onClose, onSuccess, use
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
@@ -64,17 +73,13 @@ export default function EventCreateModal({ selectedDate, onClose, onSuccess, use
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      runSearch(searchQuery);
-    }, 300);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
+    debounceRef.current = setTimeout(() => runSearch(searchQuery), 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [searchQuery, runSearch]);
 
   function addLinkedDoc(doc: Document) {
     if (!linkedDocs.find((d) => d.id === doc.id)) {
-      setLinkedDocs((prev) => [...prev, doc]);
+      setLinkedDocs((prev) => [...prev, { id: doc.id, title: doc.title, icon: doc.icon }]);
     }
     setSearchQuery('');
     setShowDropdown(false);
@@ -105,36 +110,29 @@ export default function EventCreateModal({ selectedDate, onClose, onSuccess, use
       ? new Date(`${date}T23:59:59`).toISOString()
       : new Date(`${date}T${endTime}:00`).toISOString();
 
-    const { data: event, error } = await createEvent(
+    const { data: updated, error } = await updateEvent(
+      event.id,
       {
-        user_id: userId,
         title: title.trim(),
         description: description.trim() || undefined,
         start_at,
         end_at,
         all_day: allDay,
-        color: '#0054FF',
+        color: event.color ?? '#0054FF',
         priority,
       },
       linkedDocs.map((d) => d.id)
     );
 
     setIsSubmitting(false);
-
-    if (error || !event) {
-      console.error('Failed to create event:', error);
-      return;
-    }
-
-    onSuccess(event as CalendarEvent);
+    if (error || !updated) return;
+    onSuccess(updated);
   }
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
         className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
@@ -143,7 +141,7 @@ export default function EventCreateModal({ selectedDate, onClose, onSuccess, use
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100" style={{ fontFamily: 'Pretendard, sans-serif' }}>
-            새 일정 추가
+            일정 수정
           </h2>
           <button
             onClick={onClose}
@@ -164,10 +162,8 @@ export default function EventCreateModal({ selectedDate, onClose, onSuccess, use
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="일정 제목을 입력하세요"
               className={`w-full px-3 py-2 text-sm border rounded-lg outline-none transition-colors bg-transparent text-gray-800 dark:text-gray-200
-                ${errors.title ? 'border-red-400 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-[#0054FF]'}
-                placeholder:text-gray-400 dark:placeholder:text-gray-500`}
+                ${errors.title ? 'border-red-400 focus:border-red-500' : 'border-gray-200 dark:border-gray-600 focus:border-[#0054FF]'}`}
             />
             {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title}</p>}
           </div>
@@ -191,12 +187,12 @@ export default function EventCreateModal({ selectedDate, onClose, onSuccess, use
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
-              id="allDay"
+              id="editAllDay"
               checked={allDay}
               onChange={(e) => setAllDay(e.target.checked)}
               className="w-4 h-4 accent-[#0054FF] rounded"
             />
-            <label htmlFor="allDay" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+            <label htmlFor="editAllDay" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
               하루 종일
             </label>
           </div>
@@ -296,7 +292,6 @@ export default function EventCreateModal({ selectedDate, onClose, onSuccess, use
               )}
             </div>
 
-            {/* Linked document tags */}
             {linkedDocs.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {linkedDocs.map((doc) => (
@@ -339,7 +334,7 @@ export default function EventCreateModal({ selectedDate, onClose, onSuccess, use
               {isSubmitting && (
                 <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
               )}
-              일정 추가
+              저장
             </button>
           </div>
         </form>

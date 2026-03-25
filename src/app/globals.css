@@ -90,8 +90,8 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.452 0.266 263.8); /* Payletter Blue 유지 */
+  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -101,7 +101,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: oklch(0.452 0.266 263.8);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -109,12 +109,12 @@
   --chart-5: oklch(0.269 0 0);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary: oklch(0.452 0.266 263.8);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.452 0.266 263.8);
 }
 
 @layer base {
@@ -192,6 +192,15 @@
   text-decoration: line-through;
   color: #9ca3af;
 }
+
+/* TipTap prose — dark mode */
+.dark .prose h1,
+.dark .prose h2,
+.dark .prose h3 { color: oklch(0.92 0 0); }
+.dark .prose p { color: oklch(0.78 0 0); }
+.dark .prose li { color: oklch(0.78 0 0); }
+.dark .prose blockquote { border-color: #0054FF; color: oklch(0.65 0 0); }
+.dark .prose ul[data-type="taskList"] > li[data-checked="true"] > div > p { color: oklch(0.45 0 0); }
 
 /* TipTap placeholder */
 .tiptap p.is-editor-empty:first-child::before,

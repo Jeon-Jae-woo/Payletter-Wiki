@@ -54,10 +54,10 @@ export default function SignupPage() {
 
   if (done) {
     return (
-      <div className="bg-white rounded-xl border border-border p-8 shadow-sm text-center">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-border p-8 shadow-sm text-center">
         <div className="text-4xl mb-4">📬</div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">이메일을 확인해주세요</h2>
-        <p className="text-sm text-gray-500">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">이메일을 확인해주세요</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           {email}으로 인증 링크를 보냈습니다.
           <br />링크를 클릭하면 로그인됩니다.
         </p>
@@ -67,10 +67,10 @@ export default function SignupPage() {
 
   return (
     <div className="bg-white rounded-xl border border-border p-8 shadow-sm">
-      <h1 className="text-xl font-semibold text-gray-900 mb-6">회원가입</h1>
+      <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">회원가입</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-gray-700">이메일</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">이메일</label>
           <Input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </div>
         <div className="space-y-1.5">

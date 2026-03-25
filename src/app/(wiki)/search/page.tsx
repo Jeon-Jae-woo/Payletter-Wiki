@@ -81,11 +81,11 @@ export default function SearchPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-8 py-10">
-      <h1 className="text-2xl font-bold mb-6 text-gray-900">검색</h1>
+      <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">검색</h1>
 
       {/* Search input */}
-      <div className="flex items-center gap-3 px-4 py-3 border border-gray-200 rounded-xl bg-white shadow-sm mb-6 focus-within:border-[#0054FF] transition-colors">
-        <Search size={18} className="shrink-0 text-gray-400" />
+      <div className="flex items-center gap-3 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm mb-6 focus-within:border-[#0054FF] transition-colors">
+        <Search size={18} className="shrink-0 text-gray-400 dark:text-gray-500" />
         <input
           ref={inputRef}
           type="text"
@@ -93,7 +93,7 @@ export default function SearchPage() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="문서 제목을 검색하세요..."
-          className="flex-1 text-sm outline-none placeholder-gray-400 text-gray-800 bg-transparent"
+          className="flex-1 text-sm outline-none placeholder-gray-400 dark:placeholder:text-gray-500 text-gray-800 dark:text-gray-200 bg-transparent"
         />
         {isLoading && (
           <div className="w-4 h-4 border-2 border-[#0054FF] border-t-transparent rounded-full animate-spin shrink-0" />
@@ -119,8 +119,8 @@ export default function SearchPage() {
               <button
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg text-left transition-colors group ${
                   idx === selectedIndex
-                    ? 'bg-blue-50 text-[#0054FF]'
-                    : 'hover:bg-gray-50 text-gray-700'
+                    ? 'bg-blue-50 dark:bg-blue-950 text-[#0054FF]'
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
                 }`}
                 onClick={() => handleSelect(doc)}
                 onMouseEnter={() => setSelectedIndex(idx)}
@@ -136,7 +136,7 @@ export default function SearchPage() {
                   />
                 )}
                 <span className="flex-1 truncate text-sm font-medium">{doc.title}</span>
-                <span className={`shrink-0 text-xs ${idx === selectedIndex ? 'text-[#0054FF]/70' : 'text-gray-400'}`}>
+                <span className={`shrink-0 text-xs ${idx === selectedIndex ? 'text-[#0054FF]/70' : 'text-gray-400 dark:text-gray-500'}`}>
                   {relativeTime(doc.updated_at)}
                 </span>
               </button>

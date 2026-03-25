@@ -18,11 +18,15 @@ import {
   Lock,
   CheckSquare,
   MoreHorizontal,
+  LogOut,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/lib/supabase';
 import { getRootDocuments, createDocument, getChildDocuments, getPrivateDocuments, deleteDocument } from '@/lib/documents';
+import { useTheme } from '@/hooks/useTheme';
 import type { Document } from '@/types';
 
 type NavItem = {
@@ -144,7 +148,7 @@ function DocRow({
   return (
     <li>
       <div
-        className="group flex items-center gap-1 px-2 py-1.5 rounded-md text-sm text-gray-600 hover:bg-blue-50 hover:text-[#0054FF] transition-colors cursor-pointer"
+        className="group flex items-center gap-1 px-2 py-1.5 rounded-md text-sm text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-[#0054FF] transition-colors cursor-pointer"
         style={{ paddingLeft: `${paddingLeft + 8}px` }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -154,7 +158,7 @@ function DocRow({
         {showChevron ? (
           <button
             onClick={handleChevronClick}
-            className="shrink-0 flex items-center justify-center w-4 h-4 rounded hover:bg-blue-100 transition-colors text-gray-400 hover:text-[#0054FF]"
+            className="shrink-0 flex items-center justify-center w-4 h-4 rounded hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors text-gray-400 dark:text-gray-500 hover:text-[#0054FF]"
             aria-label={isExpanded ? '접기' : '펼치기'}
             disabled={loadingChildren}
           >
@@ -174,7 +178,7 @@ function DocRow({
         {doc.icon ? (
           <span className="shrink-0 text-[14px] leading-none">{doc.icon}</span>
         ) : (
-          <FileText size={15} className="shrink-0 text-gray-400 group-hover:text-[#0054FF]" />
+          <FileText size={15} className="shrink-0 text-gray-400 dark:text-gray-500 group-hover:text-[#0054FF]" />
         )}
 
         {/* Title */}
@@ -184,7 +188,7 @@ function DocRow({
         {(isHovered || menuOpen) && (
           <button
             onClick={handleCreateChildHere}
-            className="shrink-0 flex items-center justify-center w-5 h-5 rounded hover:bg-blue-100 transition-colors text-gray-400 hover:text-[#0054FF]"
+            className="shrink-0 flex items-center justify-center w-5 h-5 rounded hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors text-gray-400 dark:text-gray-500 hover:text-[#0054FF]"
             aria-label="하위 페이지 추가"
           >
             <Plus size={13} />
@@ -196,16 +200,16 @@ function DocRow({
           <div className="relative" ref={menuRef}>
             <button
               onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
-              className="shrink-0 flex items-center justify-center w-5 h-5 rounded hover:bg-blue-100 transition-colors text-gray-400 hover:text-[#0054FF]"
+              className="shrink-0 flex items-center justify-center w-5 h-5 rounded hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors text-gray-400 dark:text-gray-500 hover:text-[#0054FF]"
               aria-label="더 보기"
             >
               <MoreHorizontal size={13} />
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-full mt-0.5 z-50 w-32 bg-white border border-gray-200 rounded-lg shadow-lg py-1">
+              <div className="absolute right-0 top-full mt-0.5 z-50 w-32 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1">
                 <button
                   onClick={handleDelete}
-                  className="w-full text-left px-3 py-1.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                  className="w-full text-left px-3 py-1.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
                 >
                   삭제
                 </button>
@@ -238,7 +242,7 @@ function SkeletonRows() {
     <>
       {[1, 2, 3].map((i) => (
         <li key={i} className="px-2 py-1.5">
-          <div className="h-4 animate-pulse bg-gray-200 rounded w-full" />
+          <div className="h-4 animate-pulse bg-gray-200 dark:bg-gray-700 rounded w-full" />
         </li>
       ))}
     </>
@@ -248,11 +252,13 @@ function SkeletonRows() {
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [privateDocuments, setPrivateDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [showPrivate, setShowPrivate] = useState(true);
 
@@ -273,6 +279,7 @@ export default function Sidebar() {
         }
 
         setUserId(user.id);
+        setUserEmail(user.email ?? null);
 
         const [{ data, error }, { data: privData }] = await Promise.all([
           getRootDocuments(),
@@ -442,13 +449,13 @@ export default function Sidebar() {
 
   return (
     <div
-      className="relative flex flex-col h-full bg-[#F7F7F7] border-r border-border transition-all duration-200 shrink-0"
+      className="relative flex flex-col h-full bg-[#F7F7F7] dark:bg-gray-900 border-r border-border transition-all duration-200 shrink-0"
       style={{ width: isCollapsed ? 0 : 240 }}
     >
       {/* Collapse toggle button */}
       <button
         onClick={() => setIsCollapsed((prev) => !prev)}
-        className="absolute -right-3 top-4 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-white border border-border shadow-sm hover:bg-blue-50 hover:text-[#0054FF] transition-colors"
+        className="absolute -right-3 top-4 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-white dark:bg-gray-800 border border-border shadow-sm hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-[#0054FF] transition-colors"
         aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
         {isCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
@@ -474,7 +481,7 @@ export default function Sidebar() {
 
         {/* Workspace Navigation */}
         <nav className="px-2 pt-3 pb-1 shrink-0">
-          <p className="px-2 mb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+          <p className="px-2 mb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
             워크스페이스
           </p>
           <ul className="space-y-0.5">
@@ -482,7 +489,7 @@ export default function Sidebar() {
               <li key={item.label}>
                 <Link
                   href={item.href}
-                  className="flex items-center gap-2.5 px-2 py-1.5 rounded-md text-sm text-gray-600 hover:bg-blue-50 hover:text-[#0054FF] transition-colors"
+                  className="flex items-center gap-2.5 px-2 py-1.5 rounded-md text-sm text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-[#0054FF] transition-colors"
                 >
                   <span className="shrink-0">{item.icon}</span>
                   <span>{item.label}</span>
@@ -500,13 +507,13 @@ export default function Sidebar() {
             {/* 공개 페이지 섹션 */}
             <div className="mb-1">
               <div className="flex items-center justify-between px-2 mb-1">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
                   페이지
                 </p>
                 <button
                   onClick={handleCreateRootDocument}
                   disabled={isCreating || !userId}
-                  className="flex items-center justify-center w-5 h-5 rounded hover:bg-blue-50 hover:text-[#0054FF] text-gray-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center w-5 h-5 rounded hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-[#0054FF] text-gray-400 dark:text-gray-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   aria-label="새 페이지"
                 >
                   <Plus size={14} />
@@ -518,7 +525,7 @@ export default function Sidebar() {
                   <SkeletonRows />
                 ) : documents.length === 0 ? (
                   <li className="px-2 py-2 text-center">
-                    <p className="text-xs text-gray-400">페이지가 없습니다</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">페이지가 없습니다</p>
                     <button
                       onClick={handleCreateRootDocument}
                       disabled={isCreating || !userId}
@@ -543,7 +550,7 @@ export default function Sidebar() {
               <button
                 onClick={handleCreateRootDocument}
                 disabled={isCreating || !userId}
-                className="flex items-center gap-2 w-full px-2 py-1.5 mt-0.5 rounded-md text-sm text-gray-500 hover:bg-blue-50 hover:text-[#0054FF] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 w-full px-2 py-1.5 mt-0.5 rounded-md text-sm text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-[#0054FF] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Plus size={15} className="shrink-0" />
                 <span>새 페이지</span>
@@ -557,7 +564,7 @@ export default function Sidebar() {
               <div className="flex items-center justify-between px-2 mb-1">
                 <button
                   onClick={() => setShowPrivate((v) => !v)}
-                  className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-600 transition-colors"
+                  className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
                   <Lock size={10} />
                   비공개
@@ -569,7 +576,7 @@ export default function Sidebar() {
                 <button
                   onClick={handleCreatePrivateDocument}
                   disabled={isCreating || !userId}
-                  className="flex items-center justify-center w-5 h-5 rounded hover:bg-blue-50 hover:text-[#0054FF] text-gray-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center w-5 h-5 rounded hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-[#0054FF] text-gray-400 dark:text-gray-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   aria-label="새 비공개 페이지"
                 >
                   <Plus size={14} />
@@ -583,7 +590,7 @@ export default function Sidebar() {
                       <SkeletonRows />
                     ) : privateDocuments.length === 0 ? (
                       <li className="px-2 py-2 text-center">
-                        <p className="text-xs text-gray-400">비공개 페이지가 없습니다</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">비공개 페이지가 없습니다</p>
                         <button
                           onClick={handleCreatePrivateDocument}
                           disabled={isCreating || !userId}
@@ -608,7 +615,7 @@ export default function Sidebar() {
                   <button
                     onClick={handleCreatePrivateDocument}
                     disabled={isCreating || !userId}
-                    className="flex items-center gap-2 w-full px-2 py-1.5 mt-0.5 rounded-md text-sm text-gray-500 hover:bg-blue-50 hover:text-[#0054FF] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 w-full px-2 py-1.5 mt-0.5 rounded-md text-sm text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-[#0054FF] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Plus size={15} className="shrink-0" />
                     <span>새 비공개 페이지</span>
@@ -621,15 +628,53 @@ export default function Sidebar() {
 
         <Separator />
 
-        {/* Bottom: Settings */}
-        <div className="px-2 py-2 shrink-0">
+        {/* Bottom: User profile + Theme toggle + Settings */}
+        <div className="px-2 py-2 shrink-0 space-y-0.5">
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-2.5 px-2 py-1.5 rounded-md text-sm text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-[#0054FF] transition-colors w-full"
+            aria-label={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+          >
+            {theme === 'dark' ? (
+              <Sun size={16} className="shrink-0" />
+            ) : (
+              <Moon size={16} className="shrink-0" />
+            )}
+            <span>{theme === 'dark' ? '라이트 모드' : '다크 모드'}</span>
+          </button>
+
           <Link
             href="/settings"
-            className="flex items-center gap-2.5 px-2 py-1.5 rounded-md text-sm text-gray-500 hover:bg-blue-50 hover:text-[#0054FF] transition-colors"
+            className="flex items-center gap-2.5 px-2 py-1.5 rounded-md text-sm text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-[#0054FF] transition-colors"
           >
             <Settings size={16} className="shrink-0" />
             <span>설정</span>
           </Link>
+          {userEmail && (
+            <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-md group">
+              {/* Avatar */}
+              <div className="shrink-0 w-6 h-6 rounded-full bg-[#0054FF] flex items-center justify-center text-white text-[10px] font-bold select-none">
+                {userEmail[0].toUpperCase()}
+              </div>
+              {/* Email */}
+              <span className="flex-1 truncate text-sm text-gray-600 dark:text-gray-400 min-w-0">
+                {userEmail}
+              </span>
+              {/* Logout */}
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  router.push('/login');
+                }}
+                className="shrink-0 opacity-0 group-hover:opacity-100 flex items-center justify-center w-5 h-5 rounded hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500 text-gray-400 dark:text-gray-500 transition-all"
+                aria-label="로그아웃"
+                title="로그아웃"
+              >
+                <LogOut size={13} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
