@@ -202,6 +202,9 @@
 .dark .prose blockquote { border-color: #0054FF; color: oklch(0.65 0 0); }
 .dark .prose ul[data-type="taskList"] > li[data-checked="true"] > div > p { color: oklch(0.45 0 0); }
 
+/* ProseMirror white-space requirement */
+.ProseMirror { white-space: pre-wrap; }
+
 /* Image block */
 .prose figure.image-block {
   margin: 1.5rem 0;
