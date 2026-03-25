@@ -90,6 +90,15 @@ export const SLASH_COMMANDS: SlashCommandItem[] = [
       window.dispatchEvent(new CustomEvent('open-page-link-search'));
     },
   },
+  {
+    title: '이미지',
+    description: '이미지를 업로드하거나 URL로 삽입',
+    icon: '🖼️',
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run();
+      window.dispatchEvent(new CustomEvent('open-image-upload'));
+    },
+  },
 ];
 
 const SlashCommandExtension = Extension.create({

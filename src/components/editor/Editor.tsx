@@ -9,6 +9,8 @@ import TaskItem from '@tiptap/extension-task-item';
 import SlashCommandExtension from './SlashCommandExtension';
 import { PageLinkNode } from './PageLinkNode';
 import PageSearchModal from './PageSearchModal';
+import { ImageBlockNode } from './ImageBlockNode';
+import ImageUploadModal from './ImageUploadModal';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { updateDocument } from '@/lib/documents';
 import {
@@ -97,6 +99,10 @@ export default function Editor({ document }: Props) {
   // ── Page Link Modal ────────────────────────────────────────
   const [showPageLinkModal, setShowPageLinkModal] = useState(false);
 
+  // ── Image Upload Modal ─────────────────────────────────────
+  const [showImageModal, setShowImageModal] = useState(false);
+  const userIdRef = useRef<string | null>(null);
+
   // ── Cover ──────────────────────────────────────────────────
   const [coverUrl, setCoverUrl] = useState<string | null>(document.cover_url ?? null);
   const [showCoverPanel, setShowCoverPanel] = useState(false);
@@ -112,6 +118,7 @@ export default function Editor({ document }: Props) {
       const { data: { user } } = await supabase.auth.getUser();
       const key: string | null = user?.user_metadata?.enc_key ?? null;
       encKeyRef.current = key;
+      userIdRef.current = user?.id ?? null;
 
       if (isEncryptedContent(document.content) && key) {
         try {
@@ -172,6 +179,15 @@ export default function Editor({ document }: Props) {
     }
     window.addEventListener('open-page-link-search', handleOpenPageLinkSearch);
     return () => window.removeEventListener('open-page-link-search', handleOpenPageLinkSearch);
+  }, []);
+
+  // ── 이미지 슬래시 커맨드 이벤트 수신 ──────────────────────
+  useEffect(() => {
+    function handleOpenImageUpload() {
+      setShowImageModal(true);
+    }
+    window.addEventListener('open-image-upload', handleOpenImageUpload);
+    return () => window.removeEventListener('open-image-upload', handleOpenImageUpload);
   }, []);
 
   // ── 브라우저 탭 타이틀 ────────────────────────────────────
@@ -274,6 +290,7 @@ export default function Editor({ document }: Props) {
       ListItemEnterFix,
       SlashCommandExtension,
       PageLinkNode,
+      ImageBlockNode,
       TaskList,
       TaskItem.configure({ nested: true }),
     ],
@@ -534,6 +551,21 @@ export default function Editor({ document }: Props) {
               setShowPageLinkModal(false);
             }}
             onClose={() => setShowPageLinkModal(false)}
+          />
+        )}
+
+        {/* 이미지 업로드 모달 */}
+        {showImageModal && (
+          <ImageUploadModal
+            userId={userIdRef.current ?? ''}
+            onInsert={(src, alt) => {
+              editor?.commands.insertContent({
+                type: 'imageBlock',
+                attrs: { src, alt, caption: '', align: 'center' },
+              });
+              setShowImageModal(false);
+            }}
+            onClose={() => setShowImageModal(false)}
           />
         )}
 
