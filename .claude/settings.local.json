@@ -22,7 +22,8 @@
       "Bash(xargs grep:*)",
       "Bash(ls C:/Users/jaewoo/Desktop/wiki/src/app/\\\\\\(wiki\\\\\\)/favorites/)",
       "Bash(ls C:/Users/jaewoo/Desktop/wiki/src/app/\\\\\\(wiki\\\\\\)/private/)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(ls C:UsersjaewooDesktopwiki/*.md)"
     ]
   }
 }

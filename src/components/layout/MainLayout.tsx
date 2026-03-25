@@ -55,9 +55,7 @@ export default function MainLayout({
             >
               <Search size={16} />
             </button>
-            <button className="px-3 py-1 text-sm font-medium rounded-md border border-border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-              공유
-            </button>
+
             <button
               onClick={handleLogout}
               className="flex items-center justify-center w-7 h-7 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"

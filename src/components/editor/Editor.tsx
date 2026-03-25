@@ -20,8 +20,8 @@ import {
 } from '@/lib/crypto';
 import { supabase } from '@/lib/supabase';
 import type { Document } from '@/types';
-import { useState, useRef, useEffect } from 'react';
-import { Smile, Camera, Star, Globe, Lock } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Smile, Camera, Star, Globe, Lock, Share2, Check, Copy } from 'lucide-react';
 
 type Props = {
   document: Document;
@@ -96,6 +96,11 @@ export default function Editor({ document }: Props) {
   // ── Favorite ───────────────────────────────────────────────
   const [isFavorite, setIsFavorite] = useState<boolean>(document.is_favorite ?? false);
 
+  // ── Share Panel ────────────────────────────────────────────
+  const [showSharePanel, setShowSharePanel] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const sharePanelRef = useRef<HTMLDivElement>(null);
+
   // ── Page Link Modal ────────────────────────────────────────
   const [showPageLinkModal, setShowPageLinkModal] = useState(false);
 
@@ -160,6 +165,17 @@ export default function Editor({ document }: Props) {
     if (showIconPicker) window.addEventListener('mousedown', handleClickOutside);
     return () => window.removeEventListener('mousedown', handleClickOutside);
   }, [showIconPicker]);
+
+  // ── 공유 패널 외부 클릭 닫기 ──────────────────────────────
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (sharePanelRef.current && !sharePanelRef.current.contains(e.target as Node)) {
+        setShowSharePanel(false);
+      }
+    }
+    if (showSharePanel) window.addEventListener('mousedown', handleClickOutside);
+    return () => window.removeEventListener('mousedown', handleClickOutside);
+  }, [showSharePanel]);
 
   // ── 커버 패널 외부 클릭 닫기 ──────────────────────────────
   useEffect(() => {
@@ -244,6 +260,31 @@ export default function Editor({ document }: Props) {
     const next = !isFavorite;
     setIsFavorite(next);
     await updateDocument(document.id, { is_favorite: next });
+  }
+
+  // ── 공유 링크 복사 ────────────────────────────────────────
+  const handleCopyShareLink = useCallback(() => {
+    const url = `${window.location.origin}/share/${document.id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [document.id]);
+
+  // ── 공유 토글 (default ↔ public) ─────────────────────────
+  async function handleToggleShare() {
+    const next: 'default' | 'public' = visibility === 'public' ? 'default' : 'public';
+    setVisibility(next);
+    const currentContent = editor?.getJSON() as Record<string, unknown> | undefined;
+    await updateDocument(document.id, {
+      visibility: next,
+      content: currentContent ?? null,
+    });
+    window.dispatchEvent(
+      new CustomEvent('document-visibility-changed', {
+        detail: { id: document.id, visibility: next, doc: { ...document, visibility: next } },
+      })
+    );
   }
 
   // ── Visibility 토글 ───────────────────────────────────────
@@ -424,12 +465,13 @@ export default function Editor({ document }: Props) {
             {/* 비공개 토글 */}
             <button
               onClick={handleToggleVisibility}
-              className={`flex items-center gap-1 text-xs transition-colors ${
+              disabled={visibility === 'public'}
+              className={`flex items-center gap-1 text-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                 visibility === 'private'
                   ? 'text-[#0054FF] hover:text-[#0044DD]'
                   : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
               }`}
-              title={visibility === 'private' ? '비공개 (클릭하여 공개 전환)' : '공개 (클릭하여 비공개 전환)'}
+              title={visibility === 'private' ? '비공개 (클릭하여 해제)' : visibility === 'public' ? '공유 중에는 비공개 불가' : '비공개로 전환'}
             >
               {visibility === 'private' ? (
                 <><Lock size={13} />비공개</>
@@ -437,20 +479,52 @@ export default function Editor({ document }: Props) {
                 <><Globe size={13} />공개</>
               )}
             </button>
+
+            {/* 공유 버튼 */}
+            <div className="relative">
+              <button
+                onClick={() => setShowSharePanel((v) => !v)}
+                disabled={visibility === 'private'}
+                className={`flex items-center gap-1 text-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                  visibility === 'public'
+                    ? 'text-[#0054FF] hover:text-[#0044DD]'
+                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
+                }`}
+                title={visibility === 'private' ? '비공개 문서는 공유 불가' : '공유 링크'}
+              >
+                <Share2 size={13} />
+                공유
+              </button>
+              {showSharePanel && (
+                <div
+                  ref={sharePanelRef}
+                  className="absolute z-20 right-0 top-6 w-72 bg-white dark:bg-gray-800 border border-border rounded-xl shadow-lg p-4"
+                >
+                  <SharePanel
+                    documentId={document.id}
+                    isShared={visibility === 'public'}
+                    onToggle={handleToggleShare}
+                    onCopy={handleCopyShareLink}
+                    copied={copied}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {/* 커버 있을 때도 비공개 토글 표시 */}
+        {/* 커버 있을 때도 비공개 + 공유 토글 표시 */}
         {coverUrl && (
-          <div className="flex justify-end mb-1">
+          <div className="flex justify-end items-center gap-3 mb-1">
             <button
               onClick={handleToggleVisibility}
-              className={`flex items-center gap-1 text-xs transition-colors ${
+              disabled={visibility === 'public'}
+              className={`flex items-center gap-1 text-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                 visibility === 'private'
                   ? 'text-[#0054FF] hover:text-[#0044DD]'
                   : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
               }`}
-              title={visibility === 'private' ? '비공개 (클릭하여 공개 전환)' : '공개 (클릭하여 비공개 전환)'}
+              title={visibility === 'private' ? '비공개 (클릭하여 해제)' : visibility === 'public' ? '공유 중에는 비공개 불가' : '비공개로 전환'}
             >
               {visibility === 'private' ? (
                 <><Lock size={13} />비공개</>
@@ -458,6 +532,36 @@ export default function Editor({ document }: Props) {
                 <><Globe size={13} />공개</>
               )}
             </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setShowSharePanel((v) => !v)}
+                disabled={visibility === 'private'}
+                className={`flex items-center gap-1 text-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                  visibility === 'public'
+                    ? 'text-[#0054FF] hover:text-[#0044DD]'
+                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400'
+                }`}
+                title={visibility === 'private' ? '비공개 문서는 공유 불가' : '공유 링크'}
+              >
+                <Share2 size={13} />
+                공유
+              </button>
+              {showSharePanel && (
+                <div
+                  ref={sharePanelRef}
+                  className="absolute z-20 right-0 top-6 w-72 bg-white dark:bg-gray-800 border border-border rounded-xl shadow-lg p-4"
+                >
+                  <SharePanel
+                    documentId={document.id}
+                    isShared={visibility === 'public'}
+                    onToggle={handleToggleShare}
+                    onCopy={handleCopyShareLink}
+                    copied={copied}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -577,6 +681,71 @@ export default function Editor({ document }: Props) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── 공유 패널 서브 컴포넌트 ────────────────────────────────────────────
+function SharePanel({
+  documentId,
+  isShared,
+  onToggle,
+  onCopy,
+  copied,
+}: {
+  documentId: string;
+  isShared: boolean;
+  onToggle: () => void;
+  onCopy: () => void;
+  copied: boolean;
+}) {
+  const shareUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/share/${documentId}`
+    : '';
+
+  return (
+    <div>
+      <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-3">문서 공유</p>
+
+      {/* 공유 토글 */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs text-gray-600 dark:text-gray-400">공유 링크 활성화</span>
+        <button
+          onClick={onToggle}
+          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+            isShared ? 'bg-[#0054FF]' : 'bg-gray-200 dark:bg-gray-600'
+          }`}
+          role="switch"
+          aria-checked={isShared}
+        >
+          <span
+            className="inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform"
+            style={{ transform: isShared ? 'translateX(18px)' : 'translateX(2px)' }}
+          />
+        </button>
+      </div>
+
+      {/* 공유 URL */}
+      {isShared && (
+        <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700 rounded-lg px-2.5 py-2">
+          <span className="flex-1 text-xs text-gray-600 dark:text-gray-300 truncate">
+            {shareUrl}
+          </span>
+          <button
+            onClick={onCopy}
+            className="flex-shrink-0 flex items-center gap-1 text-xs text-[#0054FF] hover:text-[#0044DD] transition-colors"
+          >
+            {copied ? <Check size={12} /> : <Copy size={12} />}
+            {copied ? '복사됨' : '복사'}
+          </button>
+        </div>
+      )}
+
+      {!isShared && (
+        <p className="text-xs text-gray-400 dark:text-gray-500">
+          활성화하면 누구나 링크로 이 문서를 볼 수 있습니다.
+        </p>
+      )}
     </div>
   );
 }
